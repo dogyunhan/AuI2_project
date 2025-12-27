@@ -13,8 +13,8 @@ atom_I    = 53;            % Dissociated Atom: I
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
-files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_3.dat"); 
-files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat"); 
+files.dat     = fullfile(base_path, "AuI2_30mM_0002", "merged_dat.dat"); 
+files.std = fullfile(base_path, "AuI2_30mM_0002", "merged_std.dat"); 
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
@@ -39,17 +39,17 @@ run atom_consts.m % xfactor 로드
 fprintf('Loading and preprocessing data...\n');
 
 % 2.1. Raw Data Load
-raw_solv     = readmatrix(files.solv);
-raw_dat     = readmatrix(files.sads);
-raw_std = readmatrix(files.sads_std);
+raw_solv    = readmatrix(files.solv);
+raw_dat     = readmatrix(files.dat);
+raw_std     = readmatrix(files.std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
 mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, 2);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, 2);     
+dat100ps = raw_dat(mask, 3);    % 100 ps 데이터
+std100ps = raw_std(mask, 3);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
@@ -83,8 +83,8 @@ cfg = struct();
 
 % Data
 cfg.q          = q_fit;
-cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
-cfg.target_Std = std_comp;
+cfg.target_dSq = dat100ps;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
+cfg.target_Std = std100ps;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 cfg.heat_dat_baseline = heat_dat_baseline;  % PEPC용 Basis with baseline
 
