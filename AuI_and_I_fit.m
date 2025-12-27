@@ -55,9 +55,8 @@ std100ps = raw_std(mask, 3);
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
 q_solv = raw_solv(:, 1);
 mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
-heat_dat = raw_solv(mask_solv, :); 
-[Uw, Sw, Vw] = svd(heat_dat, 'econ');
-heat_dat = Uw(:, 1:3);
+heat_dat = raw_solv(mask_solv, 3);  % 100 ps solv dat 
+
 
 % PEPC용 Basis Set 구성: [HeatingSignal, Constant, 1/q]
 heat_dat_baseline = [heat_dat, ones(size(q_fit)), 1./q_fit];
