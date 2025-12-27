@@ -1,0 +1,231 @@
+clc; clearvars; close all;
+
+%% ========================================================================
+%  1. User Inputs & Configuration
+% =========================================================================
+
+% [System] 원자 번호 설정
+elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
+elem_prod = [79, 53];      % Product State: Au-I (Diatomic)
+atom_I    = 53;            % Dissociated Atom: I
+
+% [Path] 데이터 파일 경로
+base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
+files = struct();
+files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
+files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_3.dat"); 
+files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat"); 
+
+% [Fitting Parameters]
+fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+r_init   = 2.3;           % Initial Guess for r1 (Au-I distance)
+lb_r = 2.0;  % lower bound
+ub_r = 3.0;  % upper bound
+
+% [Reference Structure] Ground State Geometry (AuI2)
+% Format: [r1(Au-I), r2(Au-I), theta(I-Au-I)]
+GS_params = [2.611, 2.611, 180]; % Theory: PBE(ADF)
+% GS_params = [2.512, 2.512, 180];   % MP2
+% GS_params = [2.540, 2.540, 180];   % SCS-MP2
+% GS_params = [2.567, 2.567, 180];   % CCSD
+% GS_params = [2.561, 2.561, 180];   % CCSD(T)
+
+% [External Script] 상수 로드
+run atom_consts.m % xfactor 로드
+
+%% ========================================================================
+%  2. Data Loading & Preprocessing
+% =========================================================================
+fprintf('Loading and preprocessing data...\n');
+
+% 2.1. Raw Data Load
+raw_solv     = readmatrix(files.solv);
+raw_dat     = readmatrix(files.sads);
+raw_std = readmatrix(files.sads_std);
+
+% 2.2. Define Master Mask (Slicing)
+q_full = raw_dat(:, 1);
+mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
+
+q_fit = q_full(mask);         % Fitting용 q 벡터
+sads_comp = raw_dat(mask, 2);    % idx=2이면 comp는 1
+std_comp = raw_std(mask, 2);     
+
+% 2.3. Solvent Heating Data Processing
+% 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
+q_solv = raw_solv(:, 1);
+mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
+heat_dat = raw_solv(mask_solv, :); 
+[Uw, Sw, Vw] = svd(heat_dat, 'econ');
+heat_dat = Uw(:, 1:3);
+
+% PEPC용 Basis Set 구성: [HeatingSignal, Constant, 1/q]
+heat_dat_baseline = [heat_dat, ones(size(q_fit)), 1./q_fit];
+
+%% ========================================================================
+%  3. Theory Calculation (Scattering Factors)
+% =========================================================================
+fprintf('Calculating scattering factors...\n');
+
+% Product (Au-I)
+[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
+
+% Ground State (I-Au-I)
+[f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
+
+% Dissociated Atom (I)
+[Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
+
+%% ========================================================================
+%  4. Fitting Configuration
+% =========================================================================
+cfg = struct();
+
+% Data
+cfg.q          = q_fit;
+cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
+cfg.target_Std = std_comp;
+cfg.heat_dat   = heat_dat; % PEPC용 Basis
+cfg.heat_dat_baseline = heat_dat_baseline;  % PEPC용 Basis with baseline
+
+% Theory Factors
+cfg.f2_prod = f2_prod;
+cfg.ff_prod = ff_prod;
+cfg.f2_GS   = f2_GS;
+cfg.ff_GS   = ff_GS;
+cfg.Sq_I    = Sq_I;
+cfg.GS_p    = GS_params;
+
+% Optimization Settings
+cfg.x0     = r_init;
+cfg.lb     = lb_r;
+cfg.ub     = ub_r;
+cfg.method = 'multistart'; % 'multistart', 'globalsearch', or 'fmincon'
+
+%% ========================================================================
+%  5. Run Fitting
+% =========================================================================
+fprintf('Running optimization (%s)...\n', cfg.method);
+out = run_structural_fitting(cfg);
+
+%% ========================================================================
+%  6. Visualization & Result
+% =========================================================================
+% Plotting
+plot_data = struct();
+plot_data(1).x = cfg.q; 
+plot_data(1).y = cfg.target_dSq; 
+plot_data(1).color = 'red'; 
+plot_data(1).label = 'Experiment (PEPCed)';
+
+plot_data(2).x = cfg.q; 
+plot_data(2).y = out.fit_dSq;
+plot_data(2).color = 'blue'; 
+plot_data(2).label = 'Theory Fit';
+
+plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A', out.r_opt);
+
+DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
+
+% Display Statistics
+disp('========================================');
+disp('           FITTING RESULTS              ');
+disp('========================================');
+fprintf('Optimized r (Au-I):  %.5f Angstrom\n', out.r_opt);
+fprintf('Chi-squared value:   %.5f\n', out.chi2);
+disp('========================================');
+
+
+%% ========================================================================
+%  Local Functions
+% =========================================================================
+
+function out = run_structural_fitting(cfg)
+    % Optimizer Setup
+    objFun = @(p) objective_function(p, cfg);
+    
+    options = optimoptions('fmincon', 'Display', 'iter', ...
+        'UseParallel', true, 'MaxFunctionEvaluations', 1e5);
+    
+    problem = createOptimProblem('fmincon', 'x0', cfg.x0, ...
+        'objective', objFun, 'lb', cfg.lb, 'ub', cfg.ub, 'options', options);
+    
+    % Run Solver
+    switch lower(cfg.method)
+        case 'multistart'
+            ms = MultiStart('UseParallel', true, 'Display', 'off');
+            [p_opt, chi2, ~, output] = run(ms, problem, 500); 
+        case 'globalsearch'
+            gs = GlobalSearch('NumTrialPoints', 500);
+            [p_opt, chi2, ~, output] = run(gs, problem);
+        otherwise
+            [p_opt, chi2, ~, output] = fmincon(problem);
+    end
+    
+    % Generate Final Curve
+    [~, fit_curve] = objective_function(p_opt, cfg);
+    
+    % Pack Output
+    out.r_opt   = p_opt(1);
+    out.chi2    = chi2;
+    out.fit_dSq = fit_curve;
+    out.output  = output;
+end
+
+function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
+    % Unpack
+    r1 = params(1);
+    
+    % 1. Calculate Product State Sq (AuI + I)
+    % Product is Diatomic (Au-I) + Monoatomic (I)
+    Sq_prod = calc_Diatomic_Sq(cfg.q, r1, cfg.f2_prod, cfg.ff_prod);
+    Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
+    
+    % 2. Calculate Reference State Sq (AuI2)
+    GS = cfg.GS_p;
+    Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
+    
+    % 3. Calculate Difference Spectrum (dSq)
+    theory_dSq = Sq_prod - Sq_GS;
+    
+    % 4. Apply PEPC & Scaling to match Experiment
+    % (Orthogonalize against solvent heating)
+    [~, theory_pepc] = HKifuncs.pepc(theory_dSq, cfg.heat_dat);
+    [~, theory_dSq_scaled] = DHanfuncs.scaler(theory_pepc, cfg.target_dSq);
+
+    % 5. Calculate Chi-square
+    res = (cfg.target_dSq - theory_dSq_scaled) ./ cfg.target_Std;
+    chi2 = sum(res.^2, 'omitnan');
+end
+
+function sq = calc_Diatomic_Sq(q, r, f2, ff)
+    % Diatomic Debye Equation
+    qr = q .* r;
+    sinc_qr = sin(qr) ./ qr;
+    sinc_qr(qr==0) = 1; % Handle division by zero
+    sq = f2 + 2 * sum(ff .* sinc_qr, 2);
+end
+
+function sq = calc_Triatomic_Sq(q, r1, r2, theta, f2, ff)
+    % Triatomic Debye Equation (General Geometry)
+    % Atom 2 at Origin (0,0,0)
+    
+    if (r1 <= 0) || (r2 <= 0)
+        error("Wrong Parameters! (should be larger than 0...")
+    end
+    
+    % Coordinates
+    p1 = [-r1; 0; 0];                              % Atom 1
+    p2 = [0; 0; 0];                                % Atom 2 (Central)
+    p3 = [-r2*cosd(theta); -r2*sind(theta); 0];    % Atom 3
+    
+    % Pairwise Distances: (1,2), (1,3), (2,3)
+    r_vec = pdist([p1, p2, p3]'); 
+    
+    % Debye Sum
+    qr = q .* r_vec;
+    sinc_qr = sin(qr) ./ qr;
+    sinc_qr(qr==0) = 1;
+    
+    sq = f2 + 2 * sum(ff .* sinc_qr, 2);
+end
