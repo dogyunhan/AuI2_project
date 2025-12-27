@@ -18,7 +18,7 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat");
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars   = [2.3 2.611 2.611 180];           % Initial Guess for r1 (Au-I distance)
+init_pars = [2.3 2.611 2.611 180]; 
 lb = [2.0 2.0 2.0 180];  % lower bound
 ub = [3.0 3.0 3.0 180];  % upper bound
 
