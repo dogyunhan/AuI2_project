@@ -18,17 +18,9 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat");
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-r_init   = 2.3;           % Initial Guess for r1 (Au-I distance)
-lb_r = 2.0;  % lower bound
-ub_r = 3.0;  % upper bound
-
-% [Reference Structure] Ground State Geometry (AuI2)
-% Format: [r1(Au-I), r2(Au-I), theta(I-Au-I)]
-GS_params = [2.611, 2.611, 180]; % Theory: PBE(ADF)
-% GS_params = [2.512, 2.512, 180];   % MP2
-% GS_params = [2.540, 2.540, 180];   % SCS-MP2
-% GS_params = [2.567, 2.567, 180];   % CCSD
-% GS_params = [2.561, 2.561, 180];   % CCSD(T)
+init_pars   = [2.3 2.611 2.611 180];           % Initial Guess for r1 (Au-I distance)
+lb = [2.0 2.0 2.0 180];  % lower bound
+ub = [3.0 3.0 3.0 180];  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -94,12 +86,11 @@ cfg.ff_prod = ff_prod;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
 cfg.Sq_I    = Sq_I;
-cfg.GS_p    = GS_params;
 
 % Optimization Settings
-cfg.x0     = r_init;
-cfg.lb     = lb_r;
-cfg.ub     = ub_r;
+cfg.x0     = init_pars;
+cfg.lb     = lb;
+cfg.ub     = ub;
 cfg.method = 'multistart'; % 'multistart', 'globalsearch', or 'fmincon'
 
 %% ========================================================================
@@ -123,7 +114,8 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A', out.r_opt);
+plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.r_opt, ...
+    out.r_GS1, out.r_GS2, out.theta);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
 
@@ -166,7 +158,10 @@ function out = run_structural_fitting(cfg)
     [~, fit_curve] = objective_function(p_opt, cfg);
     
     % Pack Output
-    out.r_opt   = p_opt(1);
+    out.r_opt   = p_opt(1); 
+    out.r_GS1   = p_opt(2); 
+    out.r_GS2   = p_opt(3);
+    out.theta   = p_opt(4);
     out.chi2    = chi2;
     out.fit_dSq = fit_curve;
     out.output  = output;
@@ -174,15 +169,15 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r1 = params(1);
+    r_prod = params(1);
+    GS = [params(2), params(3), params(4)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq (AuI + I)
     % Product is Diatomic (Au-I) + Monoatomic (I)
-    Sq_prod = calc_Diatomic_Sq(cfg.q, r1, cfg.f2_prod, cfg.ff_prod);
+    Sq_prod = calc_Diatomic_Sq(cfg.q, r_prod, cfg.f2_prod, cfg.ff_prod);
     Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
     
     % 2. Calculate Reference State Sq (AuI2)
-    GS = cfg.GS_p;
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
