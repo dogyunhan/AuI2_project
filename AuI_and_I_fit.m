@@ -19,8 +19,8 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat");
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = [2.3 2.611 2.611 180]; 
-lb = [2.0 2.0 2.0 180];  % lower bound
-ub = [3.0 3.0 3.0 180];  % upper bound
+lb        = [2.0 2.0 2.0 180];  % lower bound
+ub        = [3.0 3.0 3.0 180];  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -114,8 +114,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.r_opt, ...
-    out.r_GS1, out.r_GS2, out.theta);
+plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.params);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
 
@@ -123,7 +122,6 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
-fprintf('Optimized r (Au-I):  %.5f Angstrom\n', out.r_opt);
 fprintf('Chi-squared value:   %.5f\n', out.chi2);
 disp('========================================');
 
@@ -158,10 +156,7 @@ function out = run_structural_fitting(cfg)
     [~, fit_curve] = objective_function(p_opt, cfg);
     
     % Pack Output
-    out.r_opt   = p_opt(1); 
-    out.r_GS1   = p_opt(2); 
-    out.r_GS2   = p_opt(3);
-    out.theta   = p_opt(4);
+    out.params  = p_opt; 
     out.chi2    = chi2;
     out.fit_dSq = fit_curve;
     out.output  = output;
