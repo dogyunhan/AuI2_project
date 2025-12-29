@@ -6,8 +6,9 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_prod = [79, 53];      % Product State: Au-I (Diatomic)
-atom_I    = 53;            % Dissociated Atom: I
+elem_AuI  = [79, 53];      % Product State: I-I (Diatomic)
+elem_I3m  = [53, 53, 53];
+atom_Au   = 79;            % Dissociated Atom: Au
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,9 +19,9 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat");
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.3, [2.611 2.611 180]); 
-lb        = horzcat(2.0, [2.0 2.0 180]);  % lower bound
-ub        = horzcat(3.0, [3.0 3.0 180]);  % upper bound
+init_pars = horzcat(2.8, [3.02, 152], [2.611 180]); % AuI, I3m, GS
+lb        = horzcat(2.5, [3.02, 152], [2.0 180]);  % AuI, I3m, GS
+ub        = horzcat(3.0, [3.02, 152], [3.0 180]);  % AuI, I3m, GS
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -60,13 +61,13 @@ heat_dat_baseline = [heat_dat, ones(size(q_fit)), 1./q_fit];
 fprintf('Calculating scattering factors...\n');
 
 % Product (Au-I)
-[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
+[f2_AuI, ff_AuI] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
+
+% Product (I3m)
+[f2_I3m, ff_I3m]   = DHanfuncs.calc_scattering_factors(q_fit, elem_I3m, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
-
-% Dissociated Atom (I)
-[Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
 %% ========================================================================
 %  4. Fitting Configuration
@@ -81,11 +82,12 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 cfg.heat_dat_baseline = heat_dat_baseline;  % PEPC용 Basis with baseline
 
 % Theory Factors
-cfg.f2_prod = f2_prod;
-cfg.ff_prod = ff_prod;
+cfg.f2_AuI = f2_AuI;
+cfg.ff_AuI = ff_AuI;
+cfg.f2_I3m = f2_I3m;
+cfg.ff_I3m = ff_I3m;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
-cfg.Sq_I    = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -114,7 +116,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.params);
+plot_title = sprintf('r_{Au-I} = %.4f A, r_{I3m}1,2, %4f, theta = %4f, r_{GS}1,2 = %.4f, theta = %.4f', out.params);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
 
@@ -164,19 +166,20 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r_prod = params(1);
-    GS = [params(2), params(3), params(4)];  % r1, r2, theta
-    
-    % 1. Calculate Product State Sq (AuI + I)
-    % Product is Diatomic (Au-I) + Monoatomic (I)
-    Sq_prod = calc_Diatomic_Sq(cfg.q, r_prod, cfg.f2_prod, cfg.ff_prod);
-    Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
+    r_AuI = params(1);
+    I3m = [params(2), params(2), params(3)];  % r1, r2, theta
+    GS  = [params(4), params(4), params(5)];
+    % 1. Calculate Product State Sq 
+    % Product is Diatomic (Au-I) + Triatomic (I3m)
+    Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
+    Sq_I3m = calc_Triatomic_Sq(cfg.q, I3m(1), I3m(2), I3m(3), cfg.f2_I3m, cfg.ff_I3m);
+    Sq_prod = 3* Sq_AuI + Sq_I3m; % Add dissociated Iodine atom
     
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_prod - Sq_GS;
+    theory_dSq = Sq_prod - 3 * Sq_GS;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
