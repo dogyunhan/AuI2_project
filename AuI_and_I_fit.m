@@ -47,7 +47,7 @@ std_comp = raw_std(mask, 2);
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
 q_solv = raw_solv(:, 1);
 mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
-heat_dat = raw_solv(mask_solv, :); 
+heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
 heat_dat = Uw(:, 1:3);
 
