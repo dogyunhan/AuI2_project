@@ -38,6 +38,10 @@ tds_all = [-3e-9, 0, ...
           10e-9, 17.8e-9, 31.6e-9, 56.2e-9, ...
           100e-9, 178e-9, 316e-9, 562e-9, ...
           1e-6];
+
+% verbose = true;
+verbose = false;
+
 save = true;
 % save = false;
 
@@ -50,20 +54,21 @@ end
 %% SVD on merged data (before PEPCed)
 rangeSVD = [1,7];  % SVD 분석용 q 범위
 qSVDBool = rangeSVD(1)<q & q<rangeSVD(2);
-
 [U, S, V] = svd(mergedData(qSVDBool, :), 'econ');
-HKifuncs.inspect_SVD_v2(U, S, V, tds_all(2:end), 7, 9999, "Merged data (before PEPC)", [], q(qSVDBool, :));
-
+if verbose
+    HKifuncs.inspect_SVD_v2(U, S, V, tds_all(2:end), 7, 9999, "Merged data (before PEPC)", [], q(qSVDBool, :));
+end
 %% Plotting: Merged Data
 % 시간축 준비: 첫 번째(-3ns)는 Reference이므로 제외하고 2번째부터 사용
-plot_times = tds_all(2:end); 
-plot_data_merged = mergedData(qSVDBool, :); % (DataPEPCed 아님)
-plot_q = q(qSVDBool);
-
-% 함수 호출 (q는 SVD 범위 1~7 사용)
-make_qds_plot(plot_q, plot_data_merged, plot_times, 'Merged data (before PEPC)');
-HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 100, "Merged data (before PEPC)", [], [-3e-4 3e-4])
-
+if verbose
+    plot_times = tds_all(2:end); 
+    plot_data_merged = mergedData(qSVDBool, :); % (DataPEPCed 아님)
+    plot_q = q(qSVDBool);
+    
+    % 함수 호출 (q는 SVD 범위 1~7 사용)
+    make_qds_plot(plot_q, plot_data_merged, plot_times, 'Merged data (before PEPC)');
+    HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 100, "Merged data (before PEPC)", [], [-3e-4 3e-4])
+end
 %%
 %==================================
 % 2. Heating data 
@@ -93,20 +98,22 @@ if save
 end
 
 %%
-plot_times = td_solv(2:end); 
-plot_data_solv = mergedSolvData(qSVDBool, :); 
-plot_qw = qw(qSVDBool);
-make_qds_plot(plot_qw, plot_data_solv, plot_times, 'Heating data');
-HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 100, "Heating data", [], [-5e-4 5e-4])
-
+if verbose
+    plot_times = td_solv(2:end); 
+    plot_data_solv = mergedSolvData(qSVDBool, :); 
+    plot_qw = qw(qSVDBool);
+    make_qds_plot(plot_qw, plot_data_solv, plot_times, 'Heating data');
+    HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 100, "Heating data", [], [-5e-4 5e-4])
+end
 
 %% SVD on solvent data
 rangeSolvSVD = [1,7];  % SVD 분석용 q 범위
 solv_qSVDBool = rangeSolvSVD(1)<qw & qw<rangeSolvSVD(2);
 
 [Uw, Sw, Vw] = svd(mergedSolvData(solv_qSVDBool, :), 'econ');
-HKifuncs.inspect_SVD_v2(Uw, Sw, Vw, td_solv(2:end), 7, 777, "heating MeCN", [], qw(solv_qSVDBool, :));
-
+if verbose
+    HKifuncs.inspect_SVD_v2(Uw, Sw, Vw, td_solv(2:end), 7, 777, "heating MeCN", [], qw(solv_qSVDBool, :));
+end
 
 %%
 %==================================
