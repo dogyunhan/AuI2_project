@@ -6,8 +6,7 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_prod = [79, 53];      % Product State: Au-I (Diatomic)
-atom_I    = 53;            % Dissociated Atom: I
+elem_prod = [79, 53, 53];      % Product State: Au-I-I (Isomer)
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,9 +17,9 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat");
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.3, [2.611 2.611 180]); 
-lb        = horzcat(2.0, [2.0 2.0 180]);  % lower bound
-ub        = horzcat(3.0, [3.0 3.0 180]);  % upper bound
+init_pars = horzcat([2.3, 2.3, 165], [2.505 2.505 180]); 
+lb        = horzcat([2.0, 2.0, 100], [2.505 2.505 180]);  % lower bound
+ub        = horzcat([3.0, 3.0, 180], [2.505 2.505 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -57,14 +56,11 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 % =========================================================================
 fprintf('Calculating scattering factors...\n');
 
-% Product (Au-I)
+% Product (Au-I-I)
 [f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
-
-% Dissociated Atom (I)
-[Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
 %% ========================================================================
 %  4. Fitting Configuration
@@ -82,7 +78,6 @@ cfg.f2_prod = f2_prod;
 cfg.ff_prod = ff_prod;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
-cfg.Sq_I    = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -111,7 +106,8 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.params);
+plot_title = sprintf(['Fit Result: r_{prod} = %.4f & %.4f, theta_{prod} = %.4f ' ...
+    'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'], out.params);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
 
@@ -161,13 +157,11 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r_prod = params(1);
-    GS = [params(2), params(3), params(4)];  % r1, r2, theta
+    PROD = [params(1), params(2), params(3)];
+    GS = [params(4), params(5), params(6)];  % r1, r2, theta
     
-    % 1. Calculate Product State Sq (AuI + I)
-    % Product is Diatomic (Au-I) + Monoatomic (I)
-    Sq_prod = calc_Diatomic_Sq(cfg.q, r_prod, cfg.f2_prod, cfg.ff_prod);
-    Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
+    % 1. Calculate Product State Sq
+    Sq_prod = calc_Triatomic_Sq(cfg.q, PROD(1), PROD(2), PROD(3), cfg.f2_prod, cfg.ff_prod);
     
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
@@ -185,13 +179,6 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi2 = sum(res.^2, 'omitnan');
 end
 
-function sq = calc_Diatomic_Sq(q, r, f2, ff)
-    % Diatomic Debye Equation
-    qr = q .* r;
-    sinc_qr = sin(qr) ./ qr;
-    sinc_qr(qr==0) = 1; % Handle division by zero
-    sq = f2 + 2 * sum(ff .* sinc_qr, 2);
-end
 
 function sq = calc_Triatomic_Sq(q, r1, r2, theta, f2, ff)
     % Triatomic Debye Equation (General Geometry)
