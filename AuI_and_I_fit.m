@@ -39,8 +39,8 @@ q_full = raw_dat(:, 1);
 mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, 2);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, 2);     
+sads_comp = raw_dat(mask, 3);    % idx=2이면 comp는 1
+std_comp = raw_std(mask, 3);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
