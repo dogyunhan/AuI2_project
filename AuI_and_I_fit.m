@@ -49,10 +49,8 @@ q_solv = raw_solv(:, 1);
 mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
 heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
-heat_dat = Uw(:, 1:3);
-
-% PEPC용 Basis Set 구성: [HeatingSignal, Constant, 1/q]
-heat_dat_baseline = [heat_dat, ones(size(q_fit)), 1./q_fit];
+heat_dat = Uw(:, 1:4);
+heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 
 %% ========================================================================
 %  3. Theory Calculation (Scattering Factors)
@@ -78,7 +76,6 @@ cfg.q          = q_fit;
 cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
 cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
-cfg.heat_dat_baseline = heat_dat_baseline;  % PEPC용 Basis with baseline
 
 % Theory Factors
 cfg.f2_prod = f2_prod;

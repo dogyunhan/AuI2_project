@@ -116,7 +116,7 @@ rangePEPC= [1,7];  % PEPC용 q 범위
 qPEPC = rangePEPC(1)<q & q<rangePEPC(2);
 q_pc  = q(qPEPC);
 
-[~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), Uw(:, 1:4));
+[~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), [Uw(:, 1:4) ones(size(qw(qSVDBool))) 1./qw(qSVDBool)]);
 
 [Up, Sp, Vp] = svd(DataPEPCed, 'econ');
 HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 4)", [], q_pc);
