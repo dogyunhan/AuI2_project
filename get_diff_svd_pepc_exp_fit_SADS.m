@@ -142,6 +142,8 @@ comps_p = [1 2 3];
 %  - 공유 IRF와 공유 시간상수(τ)로 여러 Vm 성분 동시 피팅
 % =========================================
 num_exps  = 5;
+% num_exps  = 4;
+
 num_sines = 0;
 
 low_b  = [ 0 100];
@@ -152,6 +154,9 @@ init_par = [0 100];
 
 lims_tl = [0.02 800 10000 1e5 1e10];     % τ 하한
 lims_tu = [0.02 1500 30000 7e5 1e10];  % τ 상한
+
+% lims_tl = [0.02 1000 60000 1e10];     % τ 하한
+% lims_tu = [0.02 1500 70000 1e10];  % τ 상한
 
 lims_sl = [0.1 0.1 0.1 0.1];
 lims_su = [2   2   2   2  ];
@@ -235,10 +240,13 @@ time_constants = xl([10 14 18 19]);
 % [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
 %% SADS comp 고른 뒤 저장
 SADS_comps = 3;
+% DADS_comps = 3;
 
 if save
     writematrix([q(qPEPC) SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("SADS_comps_%d.dat", SADS_comps)));
     writematrix([q(qPEPC) std_SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("./std_SADS_comps_%d.dat", SADS_comps)));
+    % writematrix([q(qPEPC) DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("DADS_comps_%d.dat", SADS_comps)));
+    % writematrix([q(qPEPC) std_DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("./std_DADS_comps_%d.dat", SADS_comps)));
 end
 
 fprintf('%.6e ', xl(ind));
