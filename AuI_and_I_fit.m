@@ -16,7 +16,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
-target_SADS = 4;
+target_SADS = 1;
 title = 'Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
@@ -40,7 +40,7 @@ raw_std = readmatrix(files.sads_std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
-mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
+mask   = (q_full > 1) & (q_full < 7);
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
 sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
@@ -49,7 +49,7 @@ std_comp = raw_std(mask, target_SADS+1);
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
 q_solv = raw_solv(:, 1);
-mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
+mask_solv = (q_solv > 1) & (q_solv < 7);
 heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
 heat_dat = Uw(:, 1:3);
@@ -116,7 +116,7 @@ plot_data(2).label = 'Theory Fit';
 
 plot_title = sprintf(title, out.params);
 
-DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
+DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
 % Display Statistics
 disp('========================================');
