@@ -24,7 +24,7 @@ fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.3, [2.561 2.561 180]); 
 lb        = horzcat(2.0, [2.4 2.4 180]);  % lower bound
 ub        = horzcat(3.0, [2.8 2.8 180]);  % upper bound
-
+ddddddddd
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
 
