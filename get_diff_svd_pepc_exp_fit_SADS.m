@@ -38,6 +38,10 @@ tds_all = [-3e-9, 0, ...
           10e-9, 17.8e-9, 31.6e-9, 56.2e-9, ...
           100e-9, 178e-9, 316e-9, 562e-9, ...
           1e-6];
+
+% verbose = true;
+verbose = false;
+
 save = true;
 % save = false;
 
@@ -50,20 +54,21 @@ end
 %% SVD on merged data (before PEPCed)
 rangeSVD = [1,7];  % SVD 분석용 q 범위
 qSVDBool = rangeSVD(1)<q & q<rangeSVD(2);
-
 [U, S, V] = svd(mergedData(qSVDBool, :), 'econ');
-HKifuncs.inspect_SVD_v2(U, S, V, tds_all(2:end), 7, 9999, "Merged data (before PEPC)", [], q(qSVDBool, :));
-
+if verbose
+    HKifuncs.inspect_SVD_v2(U, S, V, tds_all(2:end), 7, 9999, "Merged data (before PEPC)", [], q(qSVDBool, :));
+end
 %% Plotting: Merged Data
 % 시간축 준비: 첫 번째(-3ns)는 Reference이므로 제외하고 2번째부터 사용
-plot_times = tds_all(2:end); 
-plot_data_merged = mergedData(qSVDBool, :); % (DataPEPCed 아님)
-plot_q = q(qSVDBool);
-
-% 함수 호출 (q는 SVD 범위 1~7 사용)
-make_qds_plot(plot_q, plot_data_merged, plot_times, 'Merged data (before PEPC)');
-HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 100, "Merged data (before PEPC)", [], [-3e-4 3e-4])
-
+if verbose
+    plot_times = tds_all(2:end); 
+    plot_data_merged = mergedData(qSVDBool, :); % (DataPEPCed 아님)
+    plot_q = q(qSVDBool);
+    
+    % 함수 호출 (q는 SVD 범위 1~7 사용)
+    make_qds_plot(plot_q, plot_data_merged, plot_times, 'Merged data (before PEPC)');
+    HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 100, "Merged data (before PEPC)", [], [-3e-4 3e-4])
+end
 %%
 %==================================
 % 2. Heating data 
@@ -93,20 +98,22 @@ if save
 end
 
 %%
-plot_times = td_solv(2:end); 
-plot_data_solv = mergedSolvData(qSVDBool, :); 
-plot_qw = qw(qSVDBool);
-make_qds_plot(plot_qw, plot_data_solv, plot_times, 'Heating data');
-HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 100, "Heating data", [], [-5e-4 5e-4])
-
+if verbose
+    plot_times = td_solv(2:end); 
+    plot_data_solv = mergedSolvData(qSVDBool, :); 
+    plot_qw = qw(qSVDBool);
+    make_qds_plot(plot_qw, plot_data_solv, plot_times, 'Heating data');
+    HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 100, "Heating data", [], [-5e-4 5e-4])
+end
 
 %% SVD on solvent data
 rangeSolvSVD = [1,7];  % SVD 분석용 q 범위
 solv_qSVDBool = rangeSolvSVD(1)<qw & qw<rangeSolvSVD(2);
 
 [Uw, Sw, Vw] = svd(mergedSolvData(solv_qSVDBool, :), 'econ');
-HKifuncs.inspect_SVD_v2(Uw, Sw, Vw, td_solv(2:end), 7, 777, "heating MeCN", [], qw(solv_qSVDBool, :));
-
+if verbose
+    HKifuncs.inspect_SVD_v2(Uw, Sw, Vw, td_solv(2:end), 7, 777, "heating MeCN", [], qw(solv_qSVDBool, :));
+end
 
 %%
 %==================================
@@ -116,21 +123,148 @@ rangePEPC= [1,7];  % PEPC용 q 범위
 qPEPC = rangePEPC(1)<q & q<rangePEPC(2);
 q_pc  = q(qPEPC);
 
-[~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), Uw(:, 1:3));
+[~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), [Uw(:, 1:3) ones(size(qw(qSVDBool))) 1./qw(qSVDBool)]);
 
 [Up, Sp, Vp] = svd(DataPEPCed, 'econ');
-HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 3)", [], q_pc);
+HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 4)", [], q_pc);
 
 %% PEPCed data plotting
 % 함수 호출 (q 대신 q_pc 사용 필수!)
-make_qds_plot(q_pc, DataPEPCed, tds_all(2:end), 'PEPCed data (comps: 3)');
-HKifuncs.draw_contour(DataPEPCed, tds_all(2:end), q_pc, 22, "PEPCed data (comps: 3)", [], [-3e-4 3e-4])
+make_qds_plot(q_pc, DataPEPCed, tds_all(2:end), 'PEPCed data (comps: 4)');
+HKifuncs.draw_contour(DataPEPCed, tds_all(2:end), q_pc, 22, "PEPCed data (comps: 4)", [], [-3e-4 3e-4])
 
 %%
 if save
     writematrix([q_pc, DataPEPCed], fullfile(default_path, "PEPCed_dat.dat"))
     writematrix([q_pc, mergedStd(qPEPC, :)], fullfile(default_path, "PEPCed_std.dat"))
 end
+
+%%
+tds_merge = tds_all(2:end) * 1e12;
+comps_p = [1 2 3];
+[std_p, conc_p] = HKifuncs.fit_V_std(comps_p, DataPEPCed, mergedStd(qPEPC, :), Up, Sp, Vp, 10, tds_merge);
+
+%% =========================================
+%  Global exponential fitting (IRF estimation)
+%  - 공유 IRF와 공유 시간상수(τ)로 여러 Vm 성분 동시 피팅
+% =========================================
+num_exps  = 5;
+% num_exps  = 4;
+
+num_sines = 0;
+
+low_b  = [ 0 100];
+up_b   = [ 0 100];
+init_par = [0 100];
+
+% ps 단위로
+
+lims_tl = [0.02 800 10000 1e5 1e10];     % τ 하한
+lims_tu = [0.02 1500 30000 7e5 1e10];  % τ 상한
+
+% lims_tl = [0.02 1000 60000 1e10];     % τ 하한
+% lims_tu = [0.02 1500 70000 1e10];  % τ 상한
+
+lims_sl = [0.1 0.1 0.1 0.1];
+lims_su = [2   2   2   2  ];
+
+lims_rl = [0.02 0.02 0.02 0.02];
+lims_ru = [5    5    5    5   ];
+
+lims_dl = [0.02 0.02 0.02 0.02];
+lims_du = [100  100  100  100 ];
+
+num_Vs = numel(comps_p);
+
+% 각 지수항의 성분별 계수(±500) 및 τ 초기값/경계 추가
+for e = 1:num_exps-1
+    for v = 1:num_Vs
+        low_b   = [low_b, -500]; %#ok<AGROW>
+        up_b    = [up_b,   500]; %#ok<AGROW>
+        init_par = [init_par, 0]; %#ok<AGROW>
+    end
+    low_b   = [low_b, lims_tl(e)]; %#ok<AGROW>
+    up_b    = [up_b,  lims_tu(e)]; %#ok<AGROW>
+    init_par = [init_par, 0.5*(lims_tl(e) + lims_tu(e))]; %#ok<AGROW>
+end
+low_b   = [low_b, lims_tl(num_exps)];
+up_b    = [up_b,  lims_tu(num_exps)];
+init_par = [init_par, 0.5*(lims_tl(num_exps) + lims_tu(num_exps))];
+
+% (진동항 없음) num_sines = 0 이므로 아래 루프는 실행 안됨
+for s = 1:num_sines %#ok<UNRCH>
+    for v = 1:num_Vs
+        low_b   = [low_b, -500]; %#ok<AGROW>
+        up_b    = [up_b,   500]; %#ok<AGROW>
+        init_par = [init_par, 0]; %#ok<AGROW>
+    end
+    low_b   = [low_b, lims_sl(s), lims_rl(s), lims_dl(s), 0]; %#ok<AGROW>
+    up_b    = [up_b,  lims_su(s), lims_ru(s), lims_du(s), 2.0*pi]; %#ok<AGROW>
+    init_par = [init_par, ...
+        0.5*(lims_sl(s)+lims_su(s)), ...
+        0.5*(lims_rl(s)+lims_ru(s)), ...
+        0.5*(lims_dl(s)+lims_du(s)), pi]; %#ok<AGROW>
+end
+
+% 예시 초기값 (최근 실험값으로 갱신 권장)
+% init_par = [ ...
+%   0.274641403531613, 0.295033740285038, ...
+%  -0.0548809277857306, 0.0240288037464530, -0.101803156762615, ...
+%   0.0200000000000000, -0.0302421380917050, 0.00703133884976953, ...
+%   0.205394514179481, 3.34835979310419, ...
+%  -0.0832155885294696, -0.658951589481646, -0.264386359287487, ...
+%  1246.86789554659, 100000];
+
+[theory_pl, theory_pl_exp, xl, errsl, fvall, hessianl] = HKifuncs.exp_fit5( ...
+    Vp(:, comps_p), std_p(:, comps_p), tds_merge, ...
+    num_exps, num_sines, ...
+    low_b, up_b, ...
+    lims_tl, lims_tu, lims_sl, lims_su, lims_dl, lims_du, ...
+    init_par, [1 1e6], 20, false); %#ok<ASGLU>
+
+% 결과 백업
+theory_pl_bk     = theory_pl.o';
+theory_pl_exp_bk = theory_pl_exp.o';
+
+% 핵심 파라미터 인덱스 구성(t0, IRF, 각 τ들)
+ind = [1 2];
+for e = 1:num_exps-1
+    ind = [ind, ind(end) + num_Vs + 1]; %#ok<AGROW>
+end
+ind = [ind, ind(end) + 1];
+for s = 1:num_sines %#ok<UNRCH>
+    ind = [ind, (ind(end)+num_Vs+1) : (ind(end)+num_Vs+4)]; %#ok<AGROW>
+end
+
+
+%% SADS 뽑아내기
+time_constants = xl([10 14 18 19]);
+% time_constants = xl([8 11 14 15]);
+% time_constants = xl([8 11 12]);
+
+
+[SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 111, [1, 1e6]);
+% [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
+%%
+SADS_comps = 4;
+recon = SAC(:, 1:SADS_comps) * profile_SAC(:, 1:SADS_comps)';
+
+HKifuncs.draw_contour(DataPEPCed, tds_all(2:end)*1e12, q_pc, 666, "PEPCed data", [], [-3e-4 3e-4])
+HKifuncs.draw_contour(recon, tds_all(2:end)*1e12, q_pc, 777, sprintf("reconstructed with SADS comps: %d", SADS_comps), [], [-3e-4 3e-4]);
+HKifuncs.draw_contour(DataPEPCed - recon, tds_all(2:end)*1e12, q_pc, 888, sprintf("residual (SADS comps: %d)", SADS_comps), [], [-3e-4 3e-4]);
+%% SADS comp 고른 뒤 저장
+% DADS_comps = 3;
+
+if save
+    writematrix([q(qPEPC) SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("SADS_comps_%d.dat", SADS_comps)));
+    writematrix([q(qPEPC) std_SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("std_SADS_comps_%d.dat", SADS_comps)));
+    % writematrix([q(qPEPC) DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("DADS_comps_%d.dat", SADS_comps)));
+    % writematrix([q(qPEPC) std_DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("std_DADS_comps_%d.dat", SADS_comps)));
+end
+
+fprintf('%.6e ', xl(ind));
+fprintf("\n");
+fprintf('%.6e ', errsl(ind));
 %%
 %==================================
 % 4. 함수들

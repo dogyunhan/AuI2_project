@@ -14,14 +14,17 @@ atom_Au   = 79;            % Dissociated Atom: Au
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
-files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_3.dat"); 
-files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat"); 
+files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
+files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
+
+target_SADS = 4;
+title = 'r_{Au-I} = %.4f, r_{I3m} = %.4f, %.4f, theta = %.4f, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.8, [3.02, 152], [2.611 180]); % AuI, I3m, GS
-lb        = horzcat(2.5, [3.02, 152], [2.0 180]);  % AuI, I3m, GS
-ub        = horzcat(3.0, [3.02, 152], [3.0 180]);  % AuI, I3m, GS
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
+init_pars = horzcat(2.8, [2.98, 2.98, 150], [2.6 2.6 180]); % AuI, I3m, GS
+lb        = horzcat(2.5, [2.98, 2.98, 150], [2.4 2.4 180]);  % AuI, I3m, GS
+ub        = horzcat(3.0, [3.02, 3.02, 180], [2.8 2.8 180]);  % AuI, I3m, GS
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -38,22 +41,20 @@ raw_std = readmatrix(files.sads_std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
-mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
+mask   = (q_full > 1) & (q_full < 7);
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, 2);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, 2);     
+sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
+std_comp = raw_std(mask, target_SADS+1);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
 q_solv = raw_solv(:, 1);
-mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
-heat_dat = raw_solv(mask_solv, :); 
+mask_solv = (q_solv > 1) & (q_solv < 7);
+heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
 heat_dat = Uw(:, 1:3);
-
-% PEPC용 Basis Set 구성: [HeatingSignal, Constant, 1/q]
-heat_dat_baseline = [heat_dat, ones(size(q_fit)), 1./q_fit];
+heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 
 %% ========================================================================
 %  3. Theory Calculation (Scattering Factors)
@@ -74,12 +75,13 @@ fprintf('Calculating scattering factors...\n');
 % =========================================================================
 cfg = struct();
 
+cfg.fit_range = fit_range;
+
 % Data
 cfg.q          = q_fit;
 cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
 cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
-cfg.heat_dat_baseline = heat_dat_baseline;  % PEPC용 Basis with baseline
 
 % Theory Factors
 cfg.f2_AuI = f2_AuI;
@@ -116,9 +118,9 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('r_{Au-I} = %.4f A, r_{I3m}1,2, %4f, theta = %4f, r_{GS}1,2 = %.4f, theta = %.4f', out.params);
+plot_title = sprintf(title, out.params);
 
-DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
+DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
 % Display Statistics
 disp('========================================');
@@ -167,8 +169,8 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_AuI = params(1);
-    I3m = [params(2), params(2), params(3)];  % r1, r2, theta
-    GS  = [params(4), params(4), params(5)];
+    I3m = [params(2), params(3), params(4)];  % r1, r2, theta
+    GS  = [params(5), params(6), params(7)];
     % 1. Calculate Product State Sq 
     % Product is Diatomic (Au-I) + Triatomic (I3m)
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
@@ -187,7 +189,8 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     [~, theory_dSq_scaled] = DHanfuncs.scaler(theory_pepc, cfg.target_dSq);
 
     % 5. Calculate Chi-square
-    res = (cfg.target_dSq - theory_dSq_scaled) ./ cfg.target_Std;
+    chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
+    res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
 end
 
