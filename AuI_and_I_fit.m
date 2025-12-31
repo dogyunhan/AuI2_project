@@ -20,7 +20,7 @@ target_SADS = 1;
 title = 'Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.3, [2.611 2.611 180]); 
 lb        = horzcat(2.0, [2.0 2.0 180]);  % lower bound
 ub        = horzcat(3.0, [3.0 3.0 180]);  % upper bound
@@ -73,6 +73,8 @@ fprintf('Calculating scattering factors...\n');
 %  4. Fitting Configuration
 % =========================================================================
 cfg = struct();
+
+cfg.fit_range = fit_range;
 
 % Data
 cfg.q          = q_fit;
@@ -184,7 +186,8 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     [~, theory_dSq_scaled] = DHanfuncs.scaler(theory_pepc, cfg.target_dSq);
 
     % 5. Calculate Chi-square
-    res = (cfg.target_dSq - theory_dSq_scaled) ./ cfg.target_Std;
+    chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
+    res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
 end
 
