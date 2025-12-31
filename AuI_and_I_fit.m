@@ -13,8 +13,11 @@ atom_I    = 53;            % Dissociated Atom: I
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
-files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_3.dat"); 
-files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_3.dat"); 
+files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
+files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
+
+target_SADS = 4;
+title = 'Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
@@ -40,8 +43,8 @@ q_full = raw_dat(:, 1);
 mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, 2);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, 2);     
+sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
+std_comp = raw_std(mask, target_SADS+1);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
@@ -111,7 +114,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf('Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f', out.params);
+plot_title = sprintf(title, out.params);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
 
