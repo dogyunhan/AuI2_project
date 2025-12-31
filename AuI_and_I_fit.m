@@ -49,7 +49,7 @@ q_solv = raw_solv(:, 1);
 mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
 heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
-heat_dat = Uw(:, 1:4);
+heat_dat = Uw(:, 1:3);
 heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 
 %% ========================================================================
