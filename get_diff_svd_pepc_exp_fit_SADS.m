@@ -42,8 +42,8 @@ tds_all = [-3e-9, 0, ...
 % verbose = true;
 verbose = false;
 
-save = true;
-% save = false;
+% save = true;
+save = false;
 
 [mergedData, mergedStd, ~, ~, q] = process_trxl_runs(default_path, runs, file_path, tds_all, [4, 7], true);
 if save
@@ -245,8 +245,14 @@ time_constants = xl([10 14 18 19]);
 
 [SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 111, [1, 1e6]);
 % [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
-%% SADS comp 고른 뒤 저장
+%%
 SADS_comps = 3;
+recon = SAC(:, 1:SADS_comps) * profile_SAC(:, 1:SADS_comps)';
+
+HKifuncs.draw_contour(DataPEPCed, tds_all(2:end)*1e12, q_pc, 666, "PEPCed data", [], [-3e-4 3e-4])
+HKifuncs.draw_contour(recon, tds_all(2:end)*1e12, q_pc, 777, sprintf("reconstructed with SADS comps: %d", SADS_comps), [], [-3e-4 3e-4]);
+HKifuncs.draw_contour(DataPEPCed - recon, tds_all(2:end)*1e12, q_pc, 888, sprintf("residual (SADS comps: %d)", SADS_comps), [], [-3e-4 3e-4]);
+%% SADS comp 고른 뒤 저장
 % DADS_comps = 3;
 
 if save
