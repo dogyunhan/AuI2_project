@@ -17,11 +17,11 @@ files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat");
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
 target_SADS = 1;
-title = 'Fit Result: r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
+title = 'r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
-fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.3, [2.611 2.611 180]); 
+fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+init_pars = horzcat(2.3, [2.561 2.561 180]); 
 lb        = horzcat(2.0, [2.4 2.4 180]);  % lower bound
 ub        = horzcat(3.0, [2.8 2.8 180]);  % upper bound
 
