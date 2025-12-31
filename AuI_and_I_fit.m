@@ -20,7 +20,7 @@ title = ['r_{prod} = %.4f & %.4f, theta_{prod} = %.4f ' ...
     'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'];
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.3, 2.3, 165], [2.4 2.4 180]); 
 lb        = horzcat([2.0, 2.0, 100], [2.4 2.4 180]);  % lower bound
 ub        = horzcat([3.0, 3.0, 180], [2.8 2.8 180]);  % upper bound
@@ -71,6 +71,8 @@ fprintf('Calculating scattering factors...\n');
 % =========================================================================
 cfg = struct();
 
+cfg.fit_range = fit_range;
+
 % Data
 cfg.q          = q_fit;
 cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
@@ -112,7 +114,7 @@ plot_data(2).label = 'Theory Fit';
 
 plot_title = sprintf(title, out.params);
 
-DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1, 7]);
+DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
 % Display Statistics
 disp('========================================');
@@ -178,7 +180,8 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     [~, theory_dSq_scaled] = DHanfuncs.scaler(theory_pepc, cfg.target_dSq);
 
     % 5. Calculate Chi-square
-    res = (cfg.target_dSq - theory_dSq_scaled) ./ cfg.target_Std;
+    chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
+    res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
 end
 
