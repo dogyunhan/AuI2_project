@@ -1,4 +1,4 @@
-clc; clearvars; 
+clc; clearvars; clf;
 %%
 %==================================
 % 1. Sample data 
@@ -39,8 +39,8 @@ tds_all = [-3e-9, 0, ...
           100e-9, 178e-9, 316e-9, 562e-9, ...
           1e-6];
 
-% verbose = true;
-verbose = false;
+verbose = true;
+% verbose = false;
 
 save = true;
 % save = false;
@@ -67,7 +67,7 @@ if verbose
     
     % 함수 호출 (q는 SVD 범위 1~7 사용)
     make_qds_plot(plot_q, plot_data_merged, plot_times, 'Merged data (before PEPC)');
-    HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 100, "Merged data (before PEPC)", [], [-3e-4 3e-4])
+    HKifuncs.draw_contour(plot_data_merged, tds_all(2:end), plot_q, 111, "Merged data (before PEPC)", [], [-5e-4 5e-4]);
 end
 %%
 %==================================
@@ -103,7 +103,7 @@ if verbose
     plot_data_solv = mergedSolvData(qSVDBool, :); 
     plot_qw = qw(qSVDBool);
     make_qds_plot(plot_qw, plot_data_solv, plot_times, 'Heating data');
-    HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 100, "Heating data", [], [-5e-4 5e-4])
+    HKifuncs.draw_contour(plot_data_solv, td_solv(2:end), plot_qw, 222, "Heating data", [], [-5e-4 5e-4]);
 end
 
 %% SVD on solvent data
@@ -126,12 +126,12 @@ q_pc  = q(qPEPC);
 [~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), [Uw(:, 1:3) ones(size(qw(qSVDBool))) 1./qw(qSVDBool)]);
 
 [Up, Sp, Vp] = svd(DataPEPCed, 'econ');
-HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 4)", [], q_pc);
+HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 3)", [], q_pc);
 
 %% PEPCed data plotting
 % 함수 호출 (q 대신 q_pc 사용 필수!)
-make_qds_plot(q_pc, DataPEPCed, tds_all(2:end), 'PEPCed data (comps: 4)');
-HKifuncs.draw_contour(DataPEPCed, tds_all(2:end), q_pc, 22, "PEPCed data (comps: 4)", [], [-3e-4 3e-4])
+make_qds_plot(q_pc, DataPEPCed, tds_all(2:end), 'PEPCed data (comps: 3)');
+HKifuncs.draw_contour(DataPEPCed, tds_all(2:end), q_pc, 333, "PEPCed data (comps: 3)", [], [-3e-4 3e-4]);
 
 %%
 if save
@@ -159,8 +159,8 @@ init_par = [0 100];
 
 % ps 단위로
 
-lims_tl = [0.02 800 10000 1e5 1e10];     % τ 하한
-lims_tu = [0.02 1500 30000 7e5 1e10];  % τ 상한
+lims_tl = [0.02 800 10000 4e5 1e10];     % τ 하한
+lims_tu = [0.02 1500 30000 6e5 1e10];  % τ 상한
 
 % lims_tl = [0.02 1000 60000 1e10];     % τ 하한
 % lims_tu = [0.02 1500 70000 1e10];  % τ 상한
@@ -235,7 +235,10 @@ ind = [ind, ind(end) + 1];
 for s = 1:num_sines %#ok<UNRCH>
     ind = [ind, (ind(end)+num_Vs+1) : (ind(end)+num_Vs+4)]; %#ok<AGROW>
 end
-
+% clc;
+% fprintf('%.6e ', xl(ind));
+% fprintf("\n");
+% fprintf('%.6e ', errsl(ind));
 
 %% SADS 뽑아내기
 time_constants = xl([10 14 18 19]);
@@ -243,7 +246,7 @@ time_constants = xl([10 14 18 19]);
 % time_constants = xl([8 11 12]);
 
 
-[SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 111, [1, 1e6]);
+[SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 9999, [1, 1e6]);
 % [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
 %%
 SADS_comps = 4;
