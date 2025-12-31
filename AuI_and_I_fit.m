@@ -19,7 +19,7 @@ target_SADS = 4;
 title = 'r_{Au-I} = %.4f, %.4f, theta = %.4f, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.0 2.0 150], [2.4 2.4 180]); 
 lb        = horzcat([2.0 2.0 90], [2.4 2.4 180]);  % lower bound
 ub        = horzcat([3.0 3.0 180], [2.8 2.8 180]);  % upper bound
@@ -39,7 +39,7 @@ raw_std = readmatrix(files.sads_std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
-mask   = (q_full > fit_range(1)) & (q_full < fit_range(2));
+mask   = (q_full > 1) & (q_full < 7);
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
 sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
@@ -48,10 +48,10 @@ std_comp = raw_std(mask, target_SADS+1);
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
 q_solv = raw_solv(:, 1);
-mask_solv = (q_solv > fit_range(1)) & (q_solv < fit_range(2));
+mask_solv = (q_solv > 1) & (q_solv < 7);
 heat_dat = raw_solv(mask_solv, 2:end); 
 [Uw, Sw, Vw] = svd(heat_dat, 'econ');
-heat_dat = Uw(:, 1:4);
+heat_dat = Uw(:, 1:3);
 heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 
 %% ========================================================================
@@ -69,6 +69,8 @@ fprintf('Calculating scattering factors...\n');
 %  4. Fitting Configuration
 % =========================================================================
 cfg = struct();
+
+cfg.fit_range = fit_range;
 
 % Data
 cfg.q          = q_fit;
@@ -111,7 +113,7 @@ plot_data(2).label = 'Theory Fit';
 
 plot_title = sprintf(title, out.params);
 
-DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=fit_range);
+DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
 % Display Statistics
 disp('========================================');
@@ -177,7 +179,8 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     [~, theory_dSq_scaled] = DHanfuncs.scaler(theory_pepc, cfg.target_dSq);
 
     % 5. Calculate Chi-square
-    res = (cfg.target_dSq - theory_dSq_scaled) ./ cfg.target_Std;
+    chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
+    res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
 end
 
