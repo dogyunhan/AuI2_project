@@ -7,7 +7,7 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
 elem_iso = [79, 53, 53];      % Product State: Au-I-I (Isomer)
-elem_bent = [53, 79, 53];      % Product State: Au-I-I (Isomer)
+elem_AuI = [79, 53];      % Product State: Au-I-I (Isomer)
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,14 +18,14 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat");
 
 target_SADS = 2;
 title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
-    'r_{bent} = %.4f & %.4f, theta_{bent} = %.4f ' ...
+    'r_{AuI} = %.4f ' ...
     'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'];
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.3, 2.3, 165], [2.3, 2.3, 165], [2.5160 2.4886 180]); % bent, isomer, GS
-lb        = horzcat([2.0, 2.0, 90], [2.0, 2.0, 90], [2.5160 2.4886 180]);  % lower bound
-ub        = horzcat([3.0, 3.0, 180], [3.0, 3.0, 180], [2.5160 2.4886 180]);  % upper bound
+init_pars = horzcat([2.3, 2.3, 165], 2.56, [2.5160 2.4886 180]); % bent, isomer, GS
+lb        = horzcat([2.0, 2.0, 90], 2.0, [2.5160 2.4886 180]);  % lower bound
+ub        = horzcat([3.0, 3.0, 180], 3.0, [2.5160 2.4886 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -66,7 +66,7 @@ fprintf('Calculating scattering factors...\n');
 [f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_iso, xfactor);
 
 % Product (Au-I-I)
-[f2_bent, ff_bent] = DHanfuncs.calc_scattering_factors(q_fit, elem_bent, xfactor);
+[f2_AuI, ff_AuI] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
@@ -87,8 +87,8 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 % Theory Factors
 cfg.f2_iso = f2_iso;
 cfg.ff_iso = ff_iso;
-cfg.f2_bent = f2_bent;
-cfg.ff_bent = ff_bent;
+cfg.f2_AuI = f2_AuI;
+cfg.ff_AuI = ff_AuI;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
 
@@ -170,13 +170,12 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     ISO = [params(1), params(2), params(3)];
-    BENT = [params(4), params(5), params(6)];
-    GS = [params(7), params(8), params(9)];  % r1, r2, theta
+    AuI = params(4);
+    GS = [params(5), params(6), params(7)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq
     Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
-    Sq_Bent = calc_Triatomic_Sq(cfg.q, BENT(1), BENT(2), BENT(3), cfg.f2_bent, cfg.ff_bent);
-    
+    Sq_AuI = ;
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
