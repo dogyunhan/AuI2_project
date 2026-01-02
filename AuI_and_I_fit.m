@@ -6,7 +6,8 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_prod = [79, 53, 53];      % Product State: Au-I-I (Isomer)
+elem_iso = [79, 53, 53];      % Product State: Au-I-I (Isomer)
+elem_bent = [53, 79, 53];      % Product State: Au-I-I (Isomer)
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -15,15 +16,16 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
-target_SADS = 4;
-title = ['r_{prod} = %.4f & %.4f, theta_{prod} = %.4f ' ...
+target_SADS = 1;
+title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
+    'r_{bent} = %.4f & %.4f, theta{bent} = %.4f ' ...
     'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'];
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.3, 2.3, 165], [2.5018 2.5018 180]); 
-lb        = horzcat([2.0, 2.0, 90], [2.5018 2.5018 180]);  % lower bound
-ub        = horzcat([3.0, 3.0, 180], [2.5018 2.5018 180]);  % upper bound
+init_pars = horzcat([2.3, 2.3, 165], [2.3, 2.3, 165], [2.5160 2.4886 180]); % bent, isomer, GS
+lb        = horzcat([2.0, 2.0, 90], [2.0, 2.0, 90], [2.5160 2.4886 180]);  % lower bound
+ub        = horzcat([3.0, 3.0, 180], [3.0, 3.0, 180], [2.5160 2.4886 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -61,7 +63,10 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 fprintf('Calculating scattering factors...\n');
 
 % Product (Au-I-I)
-[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
+[f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_iso, xfactor);
+
+% Product (Au-I-I)
+[f2_bent, ff_bent] = DHanfuncs.calc_scattering_factors(q_fit, elem_bent, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
@@ -80,8 +85,10 @@ cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
 % Theory Factors
-cfg.f2_prod = f2_prod;
-cfg.ff_prod = ff_prod;
+cfg.f2_iso = f2_iso;
+cfg.ff_iso = ff_iso;
+cfg.f2_bent = f2_bent;
+cfg.ff_bent = ff_bent;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
 
@@ -162,17 +169,19 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    PROD = [params(1), params(2), params(3)];
-    GS = [params(4), params(5), params(6)];  % r1, r2, theta
+    ISO = [params(1), params(2), params(3)];
+    BENT = [params(4), params(5), params(6)];
+    GS = [params(7), params(8), params(9)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq
-    Sq_prod = calc_Triatomic_Sq(cfg.q, PROD(1), PROD(2), PROD(3), cfg.f2_prod, cfg.ff_prod);
+    Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
+    Sq_Bent = calc_Triatomic_Sq(cfg.q, BENT(1), BENT(2), BENT(3), cfg.f2_bent, cfg.ff_bent);
     
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_prod - Sq_GS;
+    theory_dSq = Sq_Iso + Sq_Bent - 2*Sq_GS;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
