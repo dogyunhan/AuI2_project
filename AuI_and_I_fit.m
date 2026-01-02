@@ -7,7 +7,8 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
 elem_iso = [79, 53, 53];      % Product State: Au-I-I (Isomer)
-elem_AuI = [79, 53];      % Product State: Au-I-I (Isomer)
+elem_AuI = [79, 53];      % Product State: Au-I
+elem_I = 53;      % Product State: I
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -65,8 +66,9 @@ fprintf('Calculating scattering factors...\n');
 % Product (Au-I-I)
 [f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_iso, xfactor);
 
-% Product (Au-I-I)
+% Product (Au-I)
 [f2_AuI, ff_AuI] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
+[Sq_I, ~] = DHanfuncs.calc_scattering_factors(q_fit, elem_I, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
@@ -85,6 +87,7 @@ cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
 % Theory Factors
+cfg.Sq_I = Sq_I;
 cfg.f2_iso = f2_iso;
 cfg.ff_iso = ff_iso;
 cfg.f2_AuI = f2_AuI;
@@ -170,17 +173,18 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     ISO = [params(1), params(2), params(3)];
-    AuI = params(4);
+    r_AuI = params(4);
     GS = [params(5), params(6), params(7)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq
     Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
-    Sq_AuI = ;
+    Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
+
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_Iso + Sq_Bent - 2*Sq_GS;
+    theory_dSq = Sq_Iso + Sq_AuI + cfg.Sq_I - 2*Sq_GS;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
@@ -193,6 +197,14 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi2 = sum(res.^2, 'omitnan');
 end
 
+
+function sq = calc_Diatomic_Sq(q, r, f2, ff)
+    % Diatomic Debye Equation
+    qr = q .* r;
+    sinc_qr = sin(qr) ./ qr;
+    sinc_qr(qr==0) = 1; % Handle division by zero
+    sq = f2 + 2 * sum(ff .* sinc_qr, 2);
+end
 
 function sq = calc_Triatomic_Sq(q, r1, r2, theta, f2, ff)
     % Triatomic Debye Equation (General Geometry)
