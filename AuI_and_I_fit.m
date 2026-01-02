@@ -21,9 +21,9 @@ title = ['r_{prod} = %.4f & %.4f, theta_{prod} = %.4f ' ...
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.3, 2.3, 165], [2.5160 2.4886 180]); 
-lb        = horzcat([2.0, 2.0, 90], [2.5160 2.4886 180]);  % lower bound
-ub        = horzcat([3.0, 3.0, 180], [2.5160 2.4886 180]);  % upper bound
+init_pars = horzcat([2.3, 2.3, 165], [2.5018 2.5018 180]); 
+lb        = horzcat([2.0, 2.0, 90], [2.5018 2.5018 180]);  % lower bound
+ub        = horzcat([3.0, 3.0, 180], [2.5018 2.5018 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
