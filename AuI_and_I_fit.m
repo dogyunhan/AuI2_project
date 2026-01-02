@@ -17,16 +17,17 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
-target_SADS = 2;
+target_SADS = 4;
 title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
     'r_{AuI} = %.4f ' ...
-    'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'];
+    'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f ', ...
+    'coeff_{iso} = %.4f'];
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.3, 2.3, 165], 2.56, [2.5160 2.4886 180]); % bent, isomer, GS
-lb        = horzcat([2.0, 2.0, 90], 2.0, [2.5160 2.4886 180]);  % lower bound
-ub        = horzcat([3.0, 3.0, 180], 3.0, [2.5160 2.4886 180]);  % upper bound
+init_pars = horzcat([2.3, 2.3, 165], 2.56, [2.5160 2.4886 180], 1); % bent, AuI, GS
+lb        = horzcat([2.0, 2.0, 90], 2.0, [2.5160 2.4886 180], 0);  % lower bound
+ub        = horzcat([3.0, 3.0, 180], 3.0, [2.5160 2.4886 180], 2);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -175,6 +176,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     ISO = [params(1), params(2), params(3)];
     r_AuI = params(4);
     GS = [params(5), params(6), params(7)];  % r1, r2, theta
+    coeff_iso = params(8);
     
     % 1. Calculate Product State Sq
     Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
@@ -184,7 +186,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_Iso + Sq_AuI + cfg.Sq_I - 2*Sq_GS;
+    theory_dSq = coeff_iso*Sq_Iso + (2-coeff_iso) * (Sq_AuI + cfg.Sq_I) - 2*Sq_GS;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
