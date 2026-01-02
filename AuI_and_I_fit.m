@@ -16,9 +16,9 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
-target_SADS = 1;
+target_SADS = 2;
 title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
-    'r_{bent} = %.4f & %.4f, theta{bent} = %.4f ' ...
+    'r_{bent} = %.4f & %.4f, theta_{bent} = %.4f ' ...
     'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f'];
 
 % [Fitting Parameters]
