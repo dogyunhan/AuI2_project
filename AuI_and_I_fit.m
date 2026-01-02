@@ -6,7 +6,7 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_prod = [79, 53];      % Product State: Au-I (Diatomic)
+atom_Au = 79;      % Product State: Au-I (Diatomic)
 atom_I    = 53;            % Dissociated Atom: I
 
 % [Path] 데이터 파일 경로
@@ -16,14 +16,14 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
 files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
 
-target_SADS = 1;
-title = 'r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
+target_SADS = 3;
+title = 'r_{GS} = %.4f, %.4f, theta = %.4f';
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.3, [2.561 2.561 180]); 
-lb        = horzcat(2.0, [2.4 2.4 180]);  % lower bound
-ub        = horzcat(3.0, [2.65 2.65 180]);  % upper bound
+init_pars = horzcat([2.561 2.561 180]); 
+lb        = horzcat([2.4 2.4 180]);  % lower bound
+ub        = horzcat([2.65 2.65 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -60,8 +60,8 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 % =========================================================================
 fprintf('Calculating scattering factors...\n');
 
-% Product (Au-I)
-[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
+% Product (Au)
+[Sq_Au, ~] = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
@@ -83,11 +83,10 @@ cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
 % Theory Factors
-cfg.f2_prod = f2_prod;
-cfg.ff_prod = ff_prod;
+cfg.Sq_Au = Sq_Au;
+cfg.Sq_I    = Sq_I;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
-cfg.Sq_I    = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -166,13 +165,10 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r_prod = params(1);
-    GS = [params(2), params(3), params(4)];  % r1, r2, theta
+    GS = [params(1), params(2), params(3)];  % r1, r2, theta
     
-    % 1. Calculate Product State Sq (AuI + I)
-    % Product is Diatomic (Au-I) + Monoatomic (I)
-    Sq_prod = calc_Diatomic_Sq(cfg.q, r_prod, cfg.f2_prod, cfg.ff_prod);
-    Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
+    % 1. Calculate Product State Sq (Au + 2I)
+    Sq_prod = cfg.Sq_Au + 2*cfg.Sq_I; % Add dissociated Iodine atom
     
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
