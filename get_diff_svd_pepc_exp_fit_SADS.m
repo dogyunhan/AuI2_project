@@ -247,7 +247,7 @@ time_constants = xl([10 14 18 19]);
 
 
 [SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 9999, [1, 1e6]);
-% [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
+% [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 10200, [1 1e6]);
 %%
 SADS_comps = 4;
 recon = SAC(:, 1:SADS_comps) * profile_SAC(:, 1:SADS_comps)';
@@ -256,13 +256,13 @@ HKifuncs.draw_contour(DataPEPCed, tds_all(2:end)*1e12, q_pc, 666, "PEPCed data",
 HKifuncs.draw_contour(recon, tds_all(2:end)*1e12, q_pc, 777, sprintf("reconstructed with SADS comps: %d", SADS_comps), [], [-3e-4 3e-4]);
 HKifuncs.draw_contour(DataPEPCed - recon, tds_all(2:end)*1e12, q_pc, 888, sprintf("residual (SADS comps: %d)", SADS_comps), [], [-3e-4 3e-4]);
 %% SADS comp 고른 뒤 저장
-% DADS_comps = 3;
+% DADS_comps = 4;
 
 if save
     writematrix([q(qPEPC) SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("SADS_comps_%d.dat", SADS_comps)));
     writematrix([q(qPEPC) std_SAC(:, 1:SADS_comps)], fullfile(default_path, sprintf("std_SADS_comps_%d.dat", SADS_comps)));
-    % writematrix([q(qPEPC) DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("DADS_comps_%d.dat", SADS_comps)));
-    % writematrix([q(qPEPC) std_DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("std_DADS_comps_%d.dat", SADS_comps)));
+    % writematrix([q(qPEPC) DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("DADS_comps_%d.dat", DADS_comps)));
+    % writematrix([q(qPEPC) std_DADS(:, 1:DADS_comps)], fullfile(default_path, sprintf("std_DADS_comps_%d.dat", DADS_comps)));
 end
 
 fprintf('%.6e ', xl(ind));
