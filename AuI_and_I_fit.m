@@ -7,8 +7,7 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I    = 53;            % Dissociated Atom: I
-elem_bent = [53, 79, 53];
-% elem_bent = [79, 53, 53];  % isomer로 바꾼 경우
+atom_Au   = 79;
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -17,15 +16,14 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 1;
-title = 'r_{Au-I} = %.4f A, r_{bent} = %.4f, %.4f, theta = %.4f';
-% title = 'r_{Au-I} = %.4f A, r_{iso} = %.4f, %.4f, theta = %.4f';
+target_DADS = 2;
+title = 'r_{Au-I} = %.4f';
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5661, [2.5 2.5 150]); 
-lb        = horzcat(2.5661, [2.0 2.0 90]);  % lower bound
-ub        = horzcat(2.5661, [3.0 3.0 180]);  % upper bound
+init_pars = horzcat(2.0); 
+lb        = horzcat(2.0);  % lower bound
+ub        = horzcat(3.0);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -64,12 +62,11 @@ fprintf('Calculating scattering factors...\n');
 
 % Product (Au-I)
 [f2_AuI, ff_AuI]   = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
-% Dissociated Atom (I)
+% Dissociated Atom
 [Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
-% bent State (I-Au-I)
-[f2_bent, ff_bent] = DHanfuncs.calc_scattering_factors(q_fit, elem_bent, xfactor);
-
+% Au + 2I
+[Sq_Au, ~]         = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
 
 
 %% ========================================================================
@@ -89,9 +86,7 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 cfg.f2_AuI  = f2_AuI;
 cfg.ff_AuI  = ff_AuI;
 cfg.Sq_I    = Sq_I;
-
-cfg.f2_bent = f2_bent;
-cfg.ff_bent = ff_bent;
+cfg.Sq_Au   = Sq_Au;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -171,17 +166,13 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_AuI = params(1);
-    BENT = [params(2), params(3), params(4)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq (AuI + I)
     % Product is Diatomic (Au-I) + Monoatomic (I)
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
     
-    % 2. Calculate Reference State Sq (AuI2)
-    Sq_bent = calc_Triatomic_Sq(cfg.q, BENT(1), BENT(2), BENT(3), cfg.f2_bent, cfg.ff_bent);
-    
-    % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_bent - (Sq_AuI + cfg.Sq_I);
+    % 2. Calculate Difference Spectrum (dSq)
+    theory_dSq = (cfg.Sq_Au + 2*cfg.Sq_I) - (Sq_AuI + cfg.Sq_I);
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
