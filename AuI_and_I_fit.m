@@ -7,6 +7,8 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_bent = [53, 79, 53];
 elem_linear = [53, 79, 53]; 
+% elem_isomer = [79, 53, 53]; 
+
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,6 +20,8 @@ files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat");
 target_DADS = 2;
 title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
     'r_{linear} = %.4f, %.4f, theta = %.4f '];
+% title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
+%     'r_{ismoer} = %.4f, %.4f, theta = %.4f '];
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
