@@ -7,7 +7,7 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_bent = [53, 79, 53];
 elem_linear = [53, 79, 53]; 
-% elem_linear = [79, 53, 53]; 
+% elem_linear = [79, 53, 53];   % isomer로 바꿈
 
 
 % [Path] 데이터 파일 경로
@@ -25,9 +25,9 @@ title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.0 2.0 99], [2.5 2.5 150]); 
-lb        = horzcat([2.0 2.0 99], [2.0 2.0 90]);  % lower bound
-ub        = horzcat([3.0 3.0 99], [3.0 3.0 180]);  % upper bound
+init_pars = horzcat([2.0 2.0 150], [2.5 2.5 150]); 
+lb        = horzcat([2.0 2.0 90], [2.0 2.0 90]);  % lower bound
+ub        = horzcat([3.0 3.0 180], [3.0 3.0 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
