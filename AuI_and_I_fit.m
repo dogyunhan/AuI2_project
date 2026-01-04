@@ -6,8 +6,7 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
-atom_I    = 53;            % Dissociated Atom: I
-atom_Au   = 79;
+elem_I2  = [53, 53];
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
