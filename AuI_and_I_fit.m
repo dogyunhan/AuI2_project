@@ -5,7 +5,7 @@ clc; clearvars; close all;
 % =========================================================================
 
 % [System] 원자 번호 설정
-elem_bent = [53, 79, 53];
+elem_iso = [79, 53, 53];
 atom_Au = 79; 
 elem_I2 = [53 53]; 
 
@@ -16,14 +16,14 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 2;
-title = 'r_{I2} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f';
+target_DADS = 3;
+title = 'r_{I2} = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f';
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5, [2.6657 2.6657 96.8470]); 
-lb        = horzcat(2.0, [2.6657 2.6657 96.8470]);  % lower bound
-ub        = horzcat(3.3, [2.7038 2.7038 99.2504]);  % upper bound
+init_pars = horzcat(2.5, [2.5559 3.0711 124.1321]); 
+lb        = horzcat(2.5, [2.5559 2.5559 124.1321]);  % lower bound
+ub        = horzcat(3.3, [3.0711 3.0711 124.1321]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -60,7 +60,7 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 % =========================================================================
 fprintf('Calculating scattering factors...\n');
 
-[f2_bent, ff_bent] = DHanfuncs.calc_scattering_factors(q_fit, elem_bent, xfactor);
+[f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_iso, xfactor);
 
 [Sq_Au, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
 [f2_I2, ff_I2] = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor);
@@ -79,8 +79,8 @@ cfg.target_dSq = dads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
 cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
-cfg.f2_bent = f2_bent;
-cfg.ff_bent = ff_bent;
+cfg.f2_iso = f2_iso;
+cfg.ff_iso = ff_iso;
 cfg.f2_I2 = f2_I2;
 cfg.ff_I2 = ff_I2;
 
@@ -164,13 +164,13 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_I2 = params(1);
-    BENT = [params(2), params(3), params(4)];  % r1, r2, theta
+    ISO = [params(2), params(3), params(4)];  % r1, r2, theta
     
-    Sq_bent = calc_Triatomic_Sq(cfg.q, BENT(1), BENT(2), BENT(3), cfg.f2_bent, cfg.ff_bent);
+    Sq_iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
     Sq_I2 = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
 
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = (cfg.Sq_Au + Sq_I2) - Sq_bent;
+    theory_dSq = (cfg.Sq_Au + Sq_I2) - Sq_iso;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
