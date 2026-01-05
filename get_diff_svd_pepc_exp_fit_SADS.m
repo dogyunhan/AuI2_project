@@ -39,11 +39,11 @@ tds_all = [-3e-9, 0, ...
           100e-9, 178e-9, 316e-9, 562e-9, ...
           1e-6];
 
-verbose = true;
-% verbose = false;
+% verbose = true;
+verbose = false;
 
-save = true;
-% save = false;
+% save = true;
+save = false;
 
 [mergedData, mergedStd, ~, ~, q] = process_trxl_runs(default_path, runs, file_path, tds_all, [4, 7], true);
 if save
@@ -126,7 +126,7 @@ q_pc  = q(qPEPC);
 [~, DataPEPCed] = HKifuncs.pepc(mergedData(qPEPC, :), [Uw(:, 1:3) ones(size(qw(qSVDBool))) 1./qw(qSVDBool)]);
 
 [Up, Sp, Vp] = svd(DataPEPCed, 'econ');
-HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 333, "PEPCed data (comps: 3)", [], q_pc);
+HKifuncs.inspect_SVD_v2(Up, Sp, Vp, tds_all(2:end), 7, 4567, "PEPCed data (comps: 3)", [], q_pc);
 
 %% PEPCed data plotting
 % 함수 호출 (q 대신 q_pc 사용 필수!)
