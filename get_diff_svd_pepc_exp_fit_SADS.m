@@ -42,8 +42,8 @@ tds_all = [-3e-9, 0, ...
 % verbose = true;
 verbose = false;
 
-save = true;
-% save = false;
+% save = true;
+save = false;
 
 [mergedData, mergedStd, ~, ~, q] = process_trxl_runs(default_path, runs, file_path, tds_all, [4, 7], true);
 if save
@@ -244,7 +244,7 @@ time_constants = xl([10 14 18 19]);
 
 
 [SAC, std_SAC, theory_profile, profile_SAC, std_profile_SAC] = HKifuncs.KCA(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 111, [1, 1e6]);
-% [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(data_merge_all, std_merge_all, q, tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
+% [DADS, std_DADS, theory_profile_d, profile_SAC_d, std_profile_SAC_d] = HKifuncs.KCA_DADS(DataPEPCed, mergedStd(qPEPC, :), q(qPEPC), tds_merge, -1, time_constants, tds_merge, 200, [1 1e6]);
 %%
 SADS_comps = 4;
 recon = SAC(:, 1:SADS_comps) * profile_SAC(:, 1:SADS_comps)';
