@@ -6,8 +6,8 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_bent = [53, 79, 53];
-% elem_linear = [53, 79, 53]; 
-elem_linear = [79, 53, 53];   % isomer로 바꿈
+elem_linear = [53, 79, 53]; 
+% elem_linear = [79, 53, 53];   % isomer로 바꿈
 
 
 % [Path] 데이터 파일 경로
@@ -18,15 +18,15 @@ files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat");
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
 target_DADS = 1;
-% title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
-%     'r_{linear} = %.4f, %.4f, theta = %.4f '];
 title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
-    'r_{ismoer} = %.4f, %.4f, theta = %.4f '];
+    'r_{new bent} = %.4f, %.4f, theta = %.4f '];
+% title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
+%     'r_{ismoer} = %.4f, %.4f, theta = %.4f '];
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.6657 2.6657 96.8470], [2.5 2.5 150]); 
-lb        = horzcat([2.3 3.0 90], [2.4 2.5 90]);  % lower bound
+lb        = horzcat([2.3 2.8 90], [2.4 2.5 90]);  % lower bound
 ub        = horzcat([3.0 3.5 100], [3.5 3.5 150]);  % upper bound
 
 % [External Script] 상수 로드
