@@ -9,7 +9,7 @@ elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I  = 53;
 
 elem_I2  = [53, 53];
-elem_Au2  = [79 79];
+elem_Au2I2  = [53 79 79 53];
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
