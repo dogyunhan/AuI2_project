@@ -22,7 +22,7 @@ title = 'r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.3, [2.561 2.561 180]); 
-lb        = horzcat(2.0, [2.4 2.4 180]);  % lower bound
+lb        = horzcat(2.0, [2.45 2.45 180]);  % lower bound
 ub        = horzcat(3.0, [2.65 2.65 180]);  % upper bound
 
 % [External Script] 상수 로드
