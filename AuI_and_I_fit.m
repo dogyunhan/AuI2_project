@@ -17,17 +17,17 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 2;
-title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
-    'r_{linear} = %.4f, %.4f, theta = %.4f '];
+target_DADS = 1;
 % title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
-%     'r_{ismoer} = %.4f, %.4f, theta = %.4f '];
+%     'r_{linear} = %.4f, %.4f, theta = %.4f '];
+title = ['r_{bent} = %.4f, %.4f, theta = %.4f '...
+    'r_{ismoer} = %.4f, %.4f, theta = %.4f '];
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.6657 2.6657 96.8470], [2.5 2.5 150]); 
-lb        = horzcat([2.5 2.5 96.8470], [2.5 2.5 90]);  % lower bound
-ub        = horzcat([2.9 2.9 99.2504], [3.1 3.1 180]);  % upper bound
+lb        = horzcat([2.3 3.0 90], [2.4 2.5 90]);  % lower bound
+ub        = horzcat([3.0 3.5 100], [3.5 3.5 150]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
