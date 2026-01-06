@@ -24,8 +24,8 @@ title = 'r_{I2} = %.4f / r_{AuI} = %.4f';
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5, 2.5661); 
-lb        = horzcat(2.0, 2.5661);  % lower bound
-ub        = horzcat(3.0, 2.5669);  % upper bound
+lb        = horzcat(2.4, 2.4);  % lower bound
+ub        = horzcat(3.3, 3.0);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
