@@ -22,8 +22,8 @@ title = 'r_{Au-I} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f';
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5661, [2.5 2.5 150]); 
-lb        = horzcat(2.0, [2.5 2.5 90]);  % lower bound
-ub        = horzcat(3.0, [3.0 3.0 180]);  % upper bound
+lb        = horzcat(2.4, [2.5 2.5 90]);  % lower bound
+ub        = horzcat(2.6, [3.0 3.0 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
