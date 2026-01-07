@@ -19,6 +19,8 @@ files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat");
 target_SADS = 1;
 title = 'r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
 
+chi_red = true;
+
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.3, [2.561 2.561 180]); 
@@ -75,6 +77,7 @@ fprintf('Calculating scattering factors...\n');
 cfg = struct();
 
 cfg.fit_range = fit_range;
+cfg.chi_red = chi_red;
 
 % Data
 cfg.q          = q_fit;
@@ -189,6 +192,9 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
+    if cfg.chi_red
+        chi2 = chi2 / numel(params);
+    end
 end
 
 function sq = calc_Diatomic_Sq(q, r, f2, ff)
