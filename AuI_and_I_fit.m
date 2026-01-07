@@ -127,6 +127,10 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
+if chi_red
+    disp("Reduced Chi Square: ON!");
+end
+
 fprintf('Chi-squared value:   %.5f\n', out.chi2);
 disp('========================================');
 
@@ -193,7 +197,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
     if cfg.chi_red
-        chi2 = chi2 / numel(params);
+        chi2 = chi2 / (numel(cfg.q) - numel(params) - 1);
     end
 end
 
