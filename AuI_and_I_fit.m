@@ -20,7 +20,7 @@ target_SADS = 1;
 title = 'r_{GS} = %.4f, %.4f, theta = %.4f';
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.561 2.561 180]); 
 lb        = horzcat([2.4 2.4 180]);  % lower bound
 ub        = horzcat([2.65 2.65 180]);  % upper bound
