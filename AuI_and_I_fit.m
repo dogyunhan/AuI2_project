@@ -29,8 +29,8 @@ chi_red = false;
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5, 2.5661, [2.5 2.5 2.5 150]); 
-lb        = horzcat(2.7, 2.5, [2.4 2.5 2.4 120]);  % lower bound
-ub        = horzcat(3.3, 3.0, [3.5 3.5 3.5 160]);  % upper bound
+lb        = horzcat(2.8, 2.5, [2.4 2.5 2.4 120]);  % lower bound
+ub        = horzcat(3.2, 3.0, [3.5 3.5 3.5 130]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
