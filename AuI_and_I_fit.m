@@ -16,8 +16,10 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 1;
+target_DADS = 2;
 title = 'r_{I2} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f';
+
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
@@ -72,6 +74,7 @@ fprintf('Calculating scattering factors...\n');
 cfg = struct();
 
 cfg.fit_range = fit_range;
+cfg.chi_red = chi_red;
 
 % Data
 cfg.q          = q_fit;
@@ -121,7 +124,12 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
-fprintf('Chi-squared value:   %.5f\n', out.chi2);
+fprintf('Fitting q-range: %.2f ~ %.2f\n', fit_range);
+if chi_red
+    fprintf('reduced Chi-squared value:   %.5f\n', out.chi2);
+else
+    fprintf('Chi-squared value:   %.5f\n', out.chi2);
+end
 disp('========================================');
 
 
@@ -181,6 +189,9 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
+    if cfg.chi_red
+        chi2 = chi2 / (numel(cfg.q) - numel(params) - 1);
+    end
 end
 
 function sq = calc_Diatomic_Sq(q, r, f2, ff)
