@@ -7,8 +7,8 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I    = 53;            % Dissociated Atom: I
-elem_bent = [53, 79, 53];
-% elem_bent = [79, 53, 53];  % isomer로 바꾼 경우
+% elem_bent = [53, 79, 53];
+elem_bent = [79, 53, 53];  % isomer로 바꾼 경우
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -17,17 +17,17 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 1;
+target_DADS = 2;
 title = 'r_{Au-I} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f';
 % title = 'r_{Au-I} = %.4f /, r_{iso} = %.4f, %.4f, theta = %.4f';
 
-chi_red = false;
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5661, [2.5 2.5 150]); 
-lb        = horzcat(2.3, [2.5 2.5 90]);  % lower bound
-ub        = horzcat(2.6, [3.3 3.3 180]);  % upper bound
+lb        = horzcat(2.5, [2.5 2.5 90]);  % lower bound
+ub        = horzcat(2.9, [3.1 3.2 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
