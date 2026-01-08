@@ -17,14 +17,14 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 3;
+target_DADS = 4;
 title = 'r_{I3m} = %.4f, %.4f, theta = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f';
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.0 2.0 150], [2.5559 3.0711 124.1321]); 
-lb        = horzcat([2.0 2.0 90], [2.5559 2.5559 124.1321]);  % lower bound
-ub        = horzcat([3.0 3.0 180], [3.0711 3.0711 124.1321]);  % upper bound
+lb        = horzcat([2.5 2.5 90], [2.5 2.5 90]);  % lower bound
+ub        = horzcat([3.5 3.5 150], [3.5 3.5 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
