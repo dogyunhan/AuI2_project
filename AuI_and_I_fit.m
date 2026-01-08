@@ -24,7 +24,7 @@ target_DADS = 2;
 title = ['r_{I2} = %.4f / r_{AuI} = %.4f / ' ...
     'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
 
-chi_red = false;
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
