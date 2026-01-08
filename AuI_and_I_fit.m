@@ -127,6 +127,7 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
+fprintf('Fitting q-range: %.2f ~ %.2f\n', fit_range);
 if chi_red
     fprintf('reduced Chi-squared value:   %.5f\n', out.chi2);
 else
