@@ -24,11 +24,13 @@ target_DADS = 2;
 title = ['r_{I2} = %.4f / r_{AuI} = %.4f / ' ...
     'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
 
+chi_red = false;
+
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5, 2.5661, [2.5 2.5 2.5 150]); 
-lb        = horzcat(2.7, 2.5, [2.0 2.0 2.0 120]);  % lower bound
-ub        = horzcat(3.0, 3.0, [3.5 3.5 3.5 160]);  % upper bound
+lb        = horzcat(2.7, 2.5, [2.4 2.5 2.4 120]);  % lower bound
+ub        = horzcat(3.3, 3.0, [3.5 3.5 3.5 160]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -81,6 +83,7 @@ fprintf('Calculating scattering factors...\n');
 cfg = struct();
 
 cfg.fit_range = fit_range;
+cfg.chi_red = chi_red;
 
 % Data
 cfg.q          = q_fit;
@@ -134,7 +137,12 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
-fprintf('Chi-squared value:   %.5f\n', out.chi2);
+fprintf('Fitting q-range: %.2f ~ %.2f\n', fit_range);
+if chi_red
+    fprintf('reduced Chi-squared value:   %.5f\n', out.chi2);
+else
+    fprintf('Chi-squared value:   %.5f\n', out.chi2);
+end
 disp('========================================');
 
 
@@ -186,8 +194,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
 
     % 2. Calculate Difference Spectrum (dSq)
 
-    % theory_dSq = (Sq_AuI_dimer + Sq_I2) - 2 * (Sq_AuI + cfg.Sq_I);
-    theory_dSq = Sq_AuI_dimer - 2*Sq_AuI;
+    theory_dSq = (Sq_AuI_dimer + Sq_I2) - 2 * (Sq_AuI + cfg.Sq_I);
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
@@ -198,6 +205,9 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
+    if cfg.chi_red
+        chi2 = chi2 / (numel(cfg.q) - numel(params) - 1);
+    end
 end
 
 function sq = calc_Diatomic_Sq(q, r, f2, ff)
