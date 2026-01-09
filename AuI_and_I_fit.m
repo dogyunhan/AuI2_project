@@ -6,9 +6,10 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_Iso = [79, 53, 53];
+
+elem_Au2 = [79 79];
 elem_I3m  = [53, 53, 53];
-atom_Au   = 79;            % Dissociated Atom: Au
-atom_I    = 53;            
+atom_I    = 53;
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,15 +19,16 @@ files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat");
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
 target_DADS = 4;
-title = 'r_{I3m} = %.4f, %.4f, theta = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f';
+title = ['r_{I3m} = %.4f, %.4f, theta = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f ' ...
+    'r_{Au2} = %.4f '];
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.0 2.0 150], [2.5559 3.0711 124.1321]); 
-lb        = horzcat([2.5 2.5 90], [2.5 2.5 90]);  % lower bound
-ub        = horzcat([3.5 3.5 150], [3.5 3.5 150]);  % upper bound
+init_pars = horzcat([2.0 2.0 150], [2.5559 3.0711 124.1321], 2.5); 
+lb        = horzcat([2.5 2.5 120], [3.0 3.0 90], 2.4);  % lower bound
+ub        = horzcat([3.5 3.5 180], [3.7 3.7 180], 2.8);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -65,9 +67,9 @@ fprintf('Calculating scattering factors...\n');
 
 [f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_Iso, xfactor);
 
-[Sq_Au, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
-[Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
+[f2_Au2, ff_Au2] = DHanfuncs.calc_scattering_factors(q_fit, elem_Au2, xfactor);
 [f2_I3m, ff_I3m]   = DHanfuncs.calc_scattering_factors(q_fit, elem_I3m, xfactor);
+[Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
 
 %% ========================================================================
@@ -87,10 +89,11 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 cfg.f2_iso = f2_iso;
 cfg.ff_iso = ff_iso;
 
-cfg.Sq_Au = Sq_Au;
-cfg.Sq_I  = Sq_I;
+cfg.f2_Au2 = f2_Au2;
+cfg.ff_Au2 = ff_Au2;
 cfg.f2_I3m = f2_I3m;
 cfg.ff_I3m = ff_I3m;
+cfg.Sq_I  = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -176,12 +179,14 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     I3m = [params(1), params(2), params(3)];
     ISO = [params(4), params(5), params(6)];  % r1, r2, theta
+    r_Au2 = params(7);
     
     Sq_iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
-    Sq_i3m = calc_Triatomic_Sq(cfg.q, I3m(1), I3m(2), I3m(3), cfg.f2_I3m, cfg.ff_I3m);
-
+    Sq_Au2 = calc_Diatomic_Sq(cfg.q, r_Au2, cfg.f2_Au2, cfg.ff_Au2);
+    Sq_I3m = calc_Triatomic_Sq(cfg.q, I3m(1), I3m(2), I3m(3), cfg.f2_I3m, cfg.ff_I3m);
+    
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = (cfg.Sq_Au + Sq_i3m) - (cfg.Sq_I + Sq_iso);
+    theory_dSq = (Sq_Au2 + Sq_I3m + cfg.Sq_I) - 2*Sq_iso;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
