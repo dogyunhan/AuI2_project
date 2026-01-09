@@ -18,15 +18,15 @@ files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat");
 target_DADS = 2;
 
 title = ['r_{AuI} = %.4f / ' ...
-'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
+'r_{AuI2 dimer} = %.4f (2개), %.4f, theta = %.4f '];
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5, [2.5 2.5 2.5 120]); 
-lb        = horzcat(2.5, [2.3 2.5 2.4 120]);  % lower bound
-ub        = horzcat(3.0, [3.2 3.5 3.2 140]);  % upper bound
+init_pars = horzcat(2.5, [2.5 2.5 120]); 
+lb        = horzcat(2.5, [2.3 2.5 120]);  % lower bound
+ub        = horzcat(3.0, [3.2 3.5 140]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
