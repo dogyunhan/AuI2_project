@@ -15,7 +15,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 2;
+target_DADS = 4;
 
 title = ['r_{AuI} = %.4f / ' ...
 'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
