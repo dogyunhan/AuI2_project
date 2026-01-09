@@ -26,7 +26,7 @@ chi_red = true;
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat([2.0 2.0 150], [2.5559 3.0711 124.1321]); 
 lb        = horzcat([2.5 2.5 90], [2.5 2.5 90]);  % lower bound
-ub        = horzcat([3.5 3.5 150], [3.5 3.5 180]);  % upper bound
+ub        = horzcat([3.5 3.5 150], [3.5 3.5 150]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
