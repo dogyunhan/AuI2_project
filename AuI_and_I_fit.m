@@ -6,11 +6,6 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
-atom_I  = 53;
-
-elem_I2  = [53, 53];
-atom_Au  = 79;
-
 elem_AuI_dimer = [53, 79, 79, 53];
 
 % [Path] 데이터 파일 경로
@@ -25,7 +20,7 @@ target_DADS = 2;
 title = ['r_{AuI} = %.4f / ' ...
 'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
 
-chi_red = false;
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
@@ -70,8 +65,6 @@ fprintf('Calculating scattering factors...\n');
 
 % Product (Au-I)
 [f2_AuI, ff_AuI]   = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
-[Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
-
 [f2_AuI_dimer, ff_AuI_dimer] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI_dimer, xfactor);
 
 %% ========================================================================
@@ -93,8 +86,6 @@ cfg.f2_AuI  = f2_AuI;
 cfg.ff_AuI  = ff_AuI;
 cfg.f2_AuI_dimer = f2_AuI_dimer;
 cfg.ff_AuI_dimer = ff_AuI_dimer;
-
-cfg.Sq_I = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
