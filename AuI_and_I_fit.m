@@ -6,19 +6,19 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_prod = [79, 53];      % Product State: Au-I (Diatomic)
+elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I    = 53;            % Dissociated Atom: I
+atom_Au   = 79;
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
-files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
-files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
+files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
+files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_SADS = 1;
-title = 'r_{Au-I} = %.4f A, r_{GS}1 = %.4f, r_{GS}2 = %.4f, theta = %.4f';
-
+target_DADS = 4;
+title = 'r_{Au-I} = %.4f';
 chi_red = true;
 
 % [Fitting Parameters]
@@ -36,17 +36,17 @@ run atom_consts.m % xfactor 로드
 fprintf('Loading and preprocessing data...\n');
 
 % 2.1. Raw Data Load
-raw_solv     = readmatrix(files.solv);
-raw_dat     = readmatrix(files.sads);
-raw_std = readmatrix(files.sads_std);
+raw_solv    = readmatrix(files.solv);
+raw_dat     = readmatrix(files.dads);
+raw_std     = readmatrix(files.dads_std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
 mask   = (q_full > 1) & (q_full < 7);
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, target_SADS+1);     
+dads_comp = (-1)*raw_dat(mask, target_DADS+1);    % idx=2이면 comp는 1
+std_comp = raw_std(mask, target_DADS+1);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
@@ -63,13 +63,14 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 fprintf('Calculating scattering factors...\n');
 
 % Product (Au-I)
-[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_prod, xfactor);
+[f2_prod, ff_prod] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
 
 % Ground State (I-Au-I)
 [f2_GS, ff_GS]     = DHanfuncs.calc_scattering_factors(q_fit, elem_GS, xfactor);
 
 % Dissociated Atom (I)
 [Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
+[Sq_Au, ~]         = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
 
 %% ========================================================================
 %  4. Fitting Configuration
@@ -81,7 +82,7 @@ cfg.chi_red = chi_red;
 
 % Data
 cfg.q          = q_fit;
-cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
+cfg.target_dSq = dads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
 cfg.target_Std = std_comp;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
@@ -91,6 +92,7 @@ cfg.ff_prod = ff_prod;
 cfg.f2_GS   = f2_GS;
 cfg.ff_GS   = ff_GS;
 cfg.Sq_I    = Sq_I;
+cfg.Sq_Au    = Sq_Au;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -173,19 +175,19 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r_prod = params(1);
+    r_AuI = params(1);
     GS = [params(2), params(3), params(4)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq (AuI + I)
     % Product is Diatomic (Au-I) + Monoatomic (I)
-    Sq_prod = calc_Diatomic_Sq(cfg.q, r_prod, cfg.f2_prod, cfg.ff_prod);
-    Sq_prod = Sq_prod + cfg.Sq_I; % Add dissociated Iodine atom
+    Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_prod, cfg.ff_prod);
+    Sq_AuI = Sq_AuI + cfg.Sq_I; % Add dissociated Iodine atom
     
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_prod - Sq_GS;
+    theory_dSq = Sq_GS - Sq_AuI;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
