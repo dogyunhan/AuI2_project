@@ -8,6 +8,7 @@ clc; clearvars; close all;
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I  = 53;
 
+elem_I2 = [53, 53];
 elem_AuI_bridge = [53, 79, 79, 53];
 
 % [Path] 데이터 파일 경로
@@ -26,7 +27,7 @@ chi_red = true;
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5, 2.5661, [2.5 2.5]); 
-lb        = horzcat(2.6, 2.3, [2.3 2.3]);  % lower bound
+lb        = horzcat(2.0, 2.3, [2.2 2.2]);  % lower bound
 ub        = horzcat(2.8, 3.1, [3.6 3.6]);  % upper bound
 
 % [External Script] 상수 로드
@@ -67,6 +68,7 @@ fprintf('Calculating scattering factors...\n');
 [f2_AuI, ff_AuI]   = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
 [Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
+[f2_I2, ff_I2]  = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor)
 [f2_AuI_bridge, ff_AuI_bridge] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI_bridge, xfactor);
 
 %% ========================================================================
@@ -89,6 +91,8 @@ cfg.ff_AuI  = ff_AuI;
 cfg.f2_AuI_bridge = f2_AuI_bridge;
 cfg.ff_AuI_bridge = ff_AuI_bridge;
 cfg.Sq_I = Sq_I;
+cfg.f2_I2 = f2_I2;
+cfg.ff_I2 = ff_I2;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -247,4 +251,79 @@ function sq = calc_Tetratomic_c2h_Sq(q, r_left, r_center, r_right, theta, f2, ff
     sinc_qr = sin(qr) ./ qr;
 
     sq = f2 + 2 * sum(ff .* sinc_qr, 2);
+end
+
+
+function [sq, geom] = calc_Au2I2_bridged_Sq(q, r_AuI, r_AuAu, f2, ff)
+% calc_Au2I2_bridged_C2h_Sq
+%   Debye scattering style S(q) for a bridged (rhombus) Au2I2 core (C2h, planar).
+%
+% Geometry (planar rhombus):
+%   Au1 = (-r_AuAu/2, 0, 0)
+%   Au2 = ( +r_AuAu/2, 0, 0)
+%   I1  = (0, +h, 0)
+%   I2  = (0, -h, 0)
+% where h = sqrt(r_AuI^2 - (r_AuAu/2)^2)
+%
+% Inputs
+%   q      : (Nq x 1) or (Nq x M) q-values (Å^-1)
+%   r_AuI  : Au–I bridge distance (Å)
+%   r_AuAu : Au–Au distance (Å)
+%   f2     : (Nq x 1) sum_i f_i(q)^2  (same convention as your current code)
+%   ff     : (Nq x 6) pair products f_i(q)f_j(q) for i<j,
+%            columns must match pdist ordering for atoms [1..4] below.
+%
+% Atom ordering used here:
+%   1 = I1, 2 = Au1, 3 = Au2, 4 = I2
+% pdist pair order for 4 points:
+%   (1,2) (1,3) (1,4) (2,3) (2,4) (3,4)
+%   => I1-Au1, I1-Au2, I1-I2, Au1-Au2, Au1-I2, Au2-I2
+%
+% Outputs
+%   sq   : (Nq x 1) S(q)
+%   geom : struct with coordinates and key distances/angles
+
+    if (r_AuI <= 0) || (r_AuAu <= 0)
+        error("Wrong Parameters! r_AuI and r_AuAu should be > 0.");
+    end
+    if r_AuI <= (r_AuAu/2)
+        error("Invalid geometry: require r_AuI > r_AuAu/2 (otherwise h becomes imaginary).");
+    end
+
+    % Height of I above/below the Au-Au axis
+    h = sqrt(r_AuI^2 - (r_AuAu/2)^2);
+
+    % Coordinates (3x1 each)
+    p1 = [0;  +h; 0];          % I1
+    p2 = [-r_AuAu/2; 0; 0];    % Au1
+    p3 = [ +r_AuAu/2; 0; 0];   % Au2
+    p4 = [0;  -h; 0];          % I2
+
+    % All pair distances (1x6), pdist expects points as rows
+    r_vec = pdist([p1, p2, p3, p4]');
+
+    % Compute sin(qr)/(qr) safely
+    qr = q .* r_vec;  % broadcasting: (Nq x 6) if q is (Nq x 1)
+    sinc_qr = ones(size(qr));
+    mask = (qr ~= 0);
+    sinc_qr(mask) = sin(qr(mask)) ./ qr(mask);
+
+    % Debye sum (same form as your code)
+    sq = f2 + 2 * sum(ff .* sinc_qr, 2);
+
+    % Optional geometry output
+    if nargout > 1
+        % Au–I–Au angle at I (same for I1 and I2 in this symmetric model)
+        % Using triangle with sides r_AuI, r_AuI, base r_AuAu:
+        theta_AuIAu = 2 * asind(r_AuAu / (2*r_AuI));  % degrees
+
+        geom = struct();
+        geom.pI1 = p1; geom.pAu1 = p2; geom.pAu2 = p3; geom.pI2 = p4;
+        geom.h = h;
+        geom.r_AuI = r_AuI;
+        geom.r_AuAu = r_AuAu;
+        geom.r_I1I2 = 2*h;
+        geom.theta_AuIAu_deg = theta_AuIAu;
+        geom.r_pairs = r_vec; % order: 12,13,14,23,24,34
+    end
 end
