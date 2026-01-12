@@ -8,10 +8,7 @@ clc; clearvars; close all;
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I  = 53;
 
-elem_I2  = [53, 53];
-atom_Au  = 79;
-
-elem_AuI_dimer = [53, 79, 79, 53];
+elem_AuI_bridge = [53, 79, 79, 53];
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -22,15 +19,15 @@ files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat");
 
 target_DADS = 3;
 title = ['r_{I2} = %.4f / r_{AuI} = %.4f / ' ...
-    'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
+'r_{AuI2 bridge} = %.4f, %.4f'];
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5, 2.5661, [2.5 2.5 2.5 150]); 
-lb        = horzcat(2.6, 2.3, [2.3 2.3 2.3 0]);  % lower bound
-ub        = horzcat(2.8, 3.1, [3.6 3.6 3.6 180]);  % upper bound
+init_pars = horzcat(2.5, 2.5661, [2.5 2.5]); 
+lb        = horzcat(2.6, 2.3, [2.3 2.3]);  % lower bound
+ub        = horzcat(2.8, 3.1, [3.6 3.6]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -67,15 +64,10 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 % =========================================================================
 fprintf('Calculating scattering factors...\n');
 
-% Product (Au-I)
 [f2_AuI, ff_AuI]   = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
 [Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
-
-[Sq_Au, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
-[f2_I2, ff_I2] = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor);
-
-[f2_AuI_dimer, ff_AuI_dimer] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI_dimer, xfactor);
+[f2_AuI_bridge, ff_AuI_bridge] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI_bridge, xfactor);
 
 %% ========================================================================
 %  4. Fitting Configuration
@@ -94,12 +86,8 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 % Theory Factors
 cfg.f2_AuI  = f2_AuI;
 cfg.ff_AuI  = ff_AuI;
-cfg.f2_I2 = f2_I2;
-cfg.ff_I2 = ff_I2;
-cfg.f2_AuI_dimer = f2_AuI_dimer;
-cfg.ff_AuI_dimer = ff_AuI_dimer;
-
-cfg.Sq_Au = Sq_Au;
+cfg.f2_AuI_bridge = f2_AuI_bridge;
+cfg.ff_AuI_bridge = ff_AuI_bridge;
 cfg.Sq_I = Sq_I;
 
 % Optimization Settings
@@ -186,15 +174,15 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_I2 = params(1);
     r_AuI = params(2);
-    DIMER = [params(3) params(4) params(5) params(6)];
+    BRIDGE = [params(3) params(4)];
     
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
     Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
-    Sq_AuI_dimer  = calc_Tetratomic_c2h_Sq(cfg.q, DIMER(1), DIMER(2), DIMER(3), DIMER(4), cfg.f2_AuI_dimer, cfg.ff_AuI_dimer);
+    Sq_AuI_bridged  = calc_Au2I2_bridged_Sq(cfg.q, BRIDGE(1), BRIDGE(2), cfg.f2_AuI_bridge, cfg.ff_AuI_bridge);
 
     % 2. Calculate Difference Spectrum (dSq)
 
-    theory_dSq = (Sq_AuI_dimer + Sq_I2) - 2 * (Sq_AuI + cfg.Sq_I);
+    theory_dSq = (Sq_AuI_bridged + Sq_I2) - 2 * (Sq_AuI + cfg.Sq_I);
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
