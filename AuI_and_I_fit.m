@@ -15,7 +15,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 2;
+target_DADS = 3;
 
 title = ['r_{AuI} = %.4f / ' ...
 'r_{AuI2 dimer} = %.4f (2개), %.4f, theta = %.4f '];
@@ -25,8 +25,8 @@ chi_red = true;
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5, [2.5 2.5 120]); 
-lb        = horzcat(2.5, [2.3 2.5 120]);  % lower bound
-ub        = horzcat(3.0, [3.2 3.5 140]);  % upper bound
+lb        = horzcat(2.5, [2.3 2.5 90]);  % lower bound
+ub        = horzcat(3.0, [3.2 3.5 180]);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -170,7 +170,7 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_AuI = params(1);
-    DIMER = [params(2) params(3) params(4) params(5)];
+    DIMER = [params(2) params(3) params(2) params(4)];
     
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
     Sq_AuI_dimer  = calc_Tetratomic_c2h_Sq(cfg.q, DIMER(1), DIMER(2), DIMER(3), DIMER(4), ...
