@@ -24,15 +24,16 @@ times =  [0, 100e-12, 178e-12, 316e-12, 562e-12, ...
           1e-6];
 target_time = 100e-12;
 
-title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
-    'r_{AuI} = %.4f ' ...
-    'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f ', ...
+title = ['r_{iso} = %.4f & %.4f, theta = %.4f / ' ...
+    'r_{AuI} = %.4f / ' ...
+    'r_{GS} = %.4f & %.4f, theta = %.4f / ', ...
     'coeff_{iso} = %.4f'];
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 2.4 160], 0);  % lower bound
-ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 2.8 180], 0);  % upper bound
+lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 2.4 170], 0);  % lower bound
+ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 2.8 180], 2);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -86,6 +87,7 @@ fprintf('Calculating scattering factors...\n');
 cfg = struct();
 
 cfg.fit_range = fit_range;
+cfg.chi_red = chi_red;
 
 % Data
 cfg.q          = q_fit;
@@ -137,9 +139,13 @@ DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 disp('========================================');
 disp('           FITTING RESULTS              ');
 disp('========================================');
-fprintf('Chi-squared value:   %.5f\n', out.chi2);
+fprintf('Fitting q-range: %.2f ~ %.2f\n', fit_range);
+if chi_red
+    fprintf('reduced Chi-squared value:   %.5f\n', out.chi2);
+else
+    fprintf('Chi-squared value:   %.5f\n', out.chi2);
+end
 disp('========================================');
-
 
 %% ========================================================================
 %  Local Functions
@@ -203,8 +209,10 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     chi_mask = (cfg.q > cfg.fit_range(1)) & (cfg.q < cfg.fit_range(2));
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
+    if cfg.chi_red
+        chi2 = chi2 / (numel(cfg.q) - numel(params) - 1);
+    end
 end
-
 
 function sq = calc_Diatomic_Sq(q, r, f2, ff)
     % Diatomic Debye Equation
