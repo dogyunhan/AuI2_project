@@ -171,7 +171,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
 
     % 2. Calculate Difference Spectrum (dSq)
-    theory_dSq = 2*cfg.Sq_I - Sq_I2;
+    theory_dSq =  Sq_I2 - 2*cfg.Sq_I;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
