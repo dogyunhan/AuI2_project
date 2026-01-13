@@ -26,14 +26,14 @@ target_time = 100e-12;
 
 title = ['r_{iso} = %.4f & %.4f, theta = %.4f / ' ...
     'r_{AuI} = %.4f / ' ...
-    'r_{GS} = %.4f & %.4f, theta = %.4f / ', ...
+    'r_{GS} = %.4f, theta = %.4f / ', ...
     'coeff_{iso} = %.4f'];
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 2.4 170], 0);  % lower bound
-ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 2.8 180], 2);  % upper bound
+lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 170], 0);  % lower bound
+ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 180], 2);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -187,8 +187,8 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     ISO = [params(1), params(2), params(3)];
     r_AuI = params(4);
-    GS = [params(5), params(6), params(7)];  % r1, r2, theta
-    coeff_iso = params(8);
+    GS = [params(5), params(5), params(6)];  % r1, r2, theta
+    coeff_iso = params(7);
     
     % 1. Calculate Product State Sq
     Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
