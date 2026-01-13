@@ -17,7 +17,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 3;
+target_DADS = 2;
 title = 'r_{Au2} = %.4f / r_{I2} = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f';
 
 chi_red = true;
