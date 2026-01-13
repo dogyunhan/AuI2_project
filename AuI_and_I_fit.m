@@ -14,10 +14,16 @@ elem_I = 53;      % Product State: I
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
-files.sads     = fullfile(base_path, "AuI2_30mM_0002", "SADS_comps_4.dat"); 
-files.sads_std = fullfile(base_path, "AuI2_30mM_0002", "std_SADS_comps_4.dat"); 
+files.PEPCed_dat = fullfile(base_path, "AuI2_30mM_0002", "PEPCed_dat.dat"); 
+files.PEPCed_std = fullfile(base_path, "AuI2_30mM_0002", "PEPCed_std.dat"); 
 
-target_SADS = 2;
+times =  [0, 100e-12, 178e-12, 316e-12, 562e-12, ...
+          1e-9, 1.78e-9, 3.16e-9, 5.62e-9, ...
+          10e-9, 17.8e-9, 31.6e-9, 56.2e-9, ...
+          100e-9, 178e-9, 316e-9, 562e-9, ...
+          1e-6];
+target_time = 100e-12;
+
 title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
     'r_{AuI} = %.4f ' ...
     'r_{GS} = %.4f & %.4f, theta_{GS} = %.4f ', ...
@@ -25,9 +31,9 @@ title = ['r_{iso} = %.4f & %.4f, theta_{iso} = %.4f ' ...
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat([2.3, 2.3, 165], 2.5669, [2.5160 2.4886 180], 1); % bent, AuI, GS
-lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4886 2.4886 180], 0);  % lower bound
-ub        = horzcat([3.0, 3.0, 180], 2.7, [2.5160 2.5160 180], 2);  % upper bound
+lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 2.4 160], 0);  % lower bound
+ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 2.8 180], 0);  % upper bound
+init_pars = lb;
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -38,17 +44,17 @@ run atom_consts.m % xfactor 로드
 fprintf('Loading and preprocessing data...\n');
 
 % 2.1. Raw Data Load
-raw_solv     = readmatrix(files.solv);
-raw_dat     = readmatrix(files.sads);
-raw_std = readmatrix(files.sads_std);
+raw_solv    = readmatrix(files.solv);
+raw_dat     = readmatrix(files.PEPCed_dat);
+raw_std     = readmatrix(files.PEPCed_std);
 
 % 2.2. Define Master Mask (Slicing)
 q_full = raw_dat(:, 1);
 mask   = (q_full > 1) & (q_full < 7);
 
 q_fit = q_full(mask);         % Fitting용 q 벡터
-sads_comp = raw_dat(mask, target_SADS+1);    % idx=2이면 comp는 1
-std_comp = raw_std(mask, target_SADS+1);     
+dat4time = raw_dat(mask, 3);    % idx=2이면 comp는 1
+std4time = raw_std(mask, 3);     
 
 % 2.3. Solvent Heating Data Processing
 % 용매 데이터도 동일한 q grid를 갖는다고 가정하고 같은 mask 적용
@@ -83,8 +89,8 @@ cfg.fit_range = fit_range;
 
 % Data
 cfg.q          = q_fit;
-cfg.target_dSq = sads_comp;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
-cfg.target_Std = std_comp;
+cfg.target_dSq = dat4time;  % SADS comp는 이미 lsv 3개로 PEPC 되었음
+cfg.target_Std = std4time;
 cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
 % Theory Factors
