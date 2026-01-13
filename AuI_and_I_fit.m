@@ -23,8 +23,8 @@ chi_red = true;
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
 init_pars = horzcat(2.5); 
-lb        = horzcat(2.5);  % lower bound
-ub        = horzcat(4);  % upper bound
+lb        = horzcat(2.8);  % lower bound
+ub        = horzcat(3.5);  % upper bound
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -171,7 +171,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
 
     % 2. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_I2 - 2*cfg.Sq_I;
+    theory_dSq = 2*cfg.Sq_I - Sq_I2;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
