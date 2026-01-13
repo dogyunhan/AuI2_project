@@ -7,6 +7,7 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 atom_I  = 53;
 elem_I2  = [53, 53];
+elem_I3m  = [53 53 53];
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -15,16 +16,16 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 3;
-title = 'r_{I2} = %.4f';
+target_DADS = 4;
+title = 'r_{I2} = %.4f / r_{I3m} = %.4f, %.4f, theta = %.4f ';
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5); 
-lb        = horzcat(2.8);  % lower bound
-ub        = horzcat(3.5);  % upper bound
+lb        = horzcat(2.6, [2.80 3.00 179]);  % lower bound
+ub        = horzcat(3.2, [3.05 3.40 180]);  % upper bound
+init_pars = lb;
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
@@ -63,6 +64,7 @@ fprintf('Calculating scattering factors...\n');
 
 [Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 [f2_I2, ff_I2] = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor);
+[f2_I3m, ff_I3m] = DHanfuncs.calc_scattering_factors(q_fit, elem_I3m, xfactor);
 
 
 %% ========================================================================
@@ -82,6 +84,8 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 % Theory Factors
 cfg.f2_I2 = f2_I2;
 cfg.ff_I2 = ff_I2;
+cfg.f2_I3m = f2_I3m;
+cfg.ff_I3m = ff_I3m;
 
 cfg.Sq_I = Sq_I;
 
@@ -168,10 +172,11 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_I2 = params(1);
+    I3m = [params(2) params(3) params(4)];
     Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
-
+    Sq_I3m = calc_Triatomic_Sq(cfg.q, I3m(1), I3m(2), I3m(3), cfg.f2_I3m, cfg.ff_I3m);
     % 2. Calculate Difference Spectrum (dSq)
-    theory_dSq =  Sq_I2 - 2*cfg.Sq_I;
+    theory_dSq =  Sq_I3m - (Sq_I2 + cfg.Sq_I);
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
