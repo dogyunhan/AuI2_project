@@ -190,7 +190,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     
     % 3. Calculate Difference Spectrum (dSq)
     theory_dSq = Sq_bent - (Sq_AuI + cfg.Sq_I);
-    
+
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
     [~, theory_pepc] = HKifuncs.pepc(theory_dSq, cfg.heat_dat);
