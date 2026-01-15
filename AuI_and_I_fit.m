@@ -24,16 +24,14 @@ times =  [0, 100e-12, 178e-12, 316e-12, 562e-12, ...
           1e-6];
 target_time = 100e-12;
 
-title = ['r_{iso} = %.4f & %.4f, theta = %.4f / ' ...
-    'r_{AuI} = %.4f / ' ...
-    'r_{GS} = %.4f & %.4f, theta = %.4f / ', ...
-    'coeff_{iso} = %.4f'];
+title = ['r_{AuI} = %.4f / ' ...
+    'r_{GS} = %.4f & %.4f, theta = %.4f / '];
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat([2.0, 2.0, 90], 2.4, [2.4 2.4 170], 0);  % lower bound
-ub        = horzcat([3.5, 3.5, 180], 2.9, [2.8 2.8 180], 2);  % upper bound
+lb        = horzcat(2.4, [2.4 2.4 170]);  % lower bound
+ub        = horzcat(2.9, [2.8 2.8 180]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -71,9 +69,6 @@ heat_dat = [heat_dat, ones(size(q_solv(mask_solv))), 1./q_solv(mask_solv)];
 % =========================================================================
 fprintf('Calculating scattering factors...\n');
 
-% Product (Au-I-I)
-[f2_iso, ff_iso] = DHanfuncs.calc_scattering_factors(q_fit, elem_iso, xfactor);
-
 % Product (Au-I)
 [f2_AuI, ff_AuI] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI, xfactor);
 [Sq_I, ~] = DHanfuncs.calc_scattering_factors(q_fit, elem_I, xfactor);
@@ -97,8 +92,6 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 
 % Theory Factors
 cfg.Sq_I = Sq_I;
-cfg.f2_iso = f2_iso;
-cfg.ff_iso = ff_iso;
 cfg.f2_AuI = f2_AuI;
 cfg.ff_AuI = ff_AuI;
 cfg.f2_GS   = f2_GS;
@@ -185,20 +178,17 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    ISO = [params(1), params(2), params(3)];
-    r_AuI = params(4);
-    GS = [params(5), params(6), params(7)];  % r1, r2, theta
-    coeff_iso = params(8);
+    r_AuI = params(1);
+    GS = [params(2), params(3), params(4)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq
-    Sq_Iso = calc_Triatomic_Sq(cfg.q, ISO(1), ISO(2), ISO(3), cfg.f2_iso, cfg.ff_iso);
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
 
     % 2. Calculate Reference State Sq (AuI2)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_GS, cfg.ff_GS);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = coeff_iso*Sq_Iso + (2-coeff_iso) * (Sq_AuI + cfg.Sq_I) - 2*Sq_GS;
+    theory_dSq = (Sq_AuI + cfg.Sq_I) - Sq_GS;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
