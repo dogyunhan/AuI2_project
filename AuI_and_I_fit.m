@@ -25,13 +25,13 @@ times =  [0, 100e-12, 178e-12, 316e-12, 562e-12, ...
 target_time = 100e-12;
 
 title = ['r_{AuI} = %.4f / ' ...
-    'r_{GS} = %.4f & %.4f, theta = %.4f / '];
+    'r_{GS} = %.4f(2개), theta = %.4f / '];
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.4, [2.4 2.4 170]);  % lower bound
-ub        = horzcat(2.9, [2.8 2.8 180]);  % upper bound
+lb        = horzcat(2.4, [2.4 170]);  % lower bound
+ub        = horzcat(2.9, [2.8 180]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -179,7 +179,7 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_AuI = params(1);
-    GS = [params(2), params(3), params(4)];  % r1, r2, theta
+    GS = [params(2), params(2), params(3)];  % r1, r2, theta
     
     % 1. Calculate Product State Sq
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
