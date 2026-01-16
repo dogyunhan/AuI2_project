@@ -15,15 +15,15 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 4;
+target_DADS = 2;
 title = 'r_{iso} = %.4f, %.4f, theta = %.4f / r_{AuI2} = %.4f, %.4f, theta = %.4f';
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb = horzcat([2.5 2.5 90], [2.4 2.4 150]); % lower bound
-ub = horzcat([3.2 3.2 150], [3.5 3.5 180]); % upper bound
+lb = horzcat([2.45 2.45 90], [2.5790 2.4548 179]); % lower bound
+ub = horzcat([2.6 2.6 150], [2.5790 2.4548 180]); % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
