@@ -6,7 +6,6 @@ clc; clearvars; close all;
 
 % [System] 원자 번호 설정
 elem_GS   = [53, 79, 53];  % Ground State: I-Au-I (Triatomic)
-elem_iso = [79, 53, 53];      % Product State: Au-I-I (Isomer)
 elem_AuI = [79, 53];      % Product State: Au-I
 elem_I = 53;      % Product State: I
 
