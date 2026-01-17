@@ -21,10 +21,10 @@ title = 'r_{I2} = %.4f';
 chi_red = true;
 
 % [Fitting Parameters]
-fit_range = [1.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5); 
+fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
 lb        = horzcat(2.8);  % lower bound
-ub        = horzcat(3.5);  % upper bound
+ub        = horzcat(3.8);  % upper bound
+init_pars = lb;
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
