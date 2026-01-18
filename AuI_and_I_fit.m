@@ -18,7 +18,7 @@ files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat");
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
 target_DADS = 4;
-title = 'r_{iso} = %.4f, %.4f, theta = %.4f / r_{I3m} = %.4f, %.4f, theta = %.4f ';
+title = 'r_{iso} = %.4f, %.4f, theta = %.4f / r_{I3m} = %.4f, %.4f, theta = %.4f / chi: %.5f';
 
 chi_red = true;
 
@@ -119,7 +119,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf(title, out.params);
+plot_title = sprintf(title, out.params, out.chi2);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
