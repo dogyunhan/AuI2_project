@@ -16,16 +16,16 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 2;
+target_DADS = 3;
 title = 'r_{I2} = %.4f / r_{iso} = %.4f, %.4f, theta = %.4f';
 
-chi_red = false;
+chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-init_pars = horzcat(2.5, [2.5 2.5 150]); 
 lb = horzcat(2.0, [2.5 2.5 90]); % lower bound
 ub = horzcat(3.3, [3.5 3.5 150]); % upper bound
+init_pars = lb;
 
 % [External Script] 상수 로드
 run atom_consts.m % xfactor 로드
