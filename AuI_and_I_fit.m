@@ -7,8 +7,7 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_AuI = [79, 53];      % Product State: Au-I (Diatomic)
 atom_I    = 53;            % Dissociated Atom: I
-elem_bent = [53, 79, 53];
-elem_I2 = [53 53];
+elem_AuI2 = [53, 79, 53];
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -17,15 +16,15 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 3;
-title = 'r_{Au-I} = %.4f / r_{AuI2} = %.4f, %.4f, theta = %.4f / r_{I2} = %.4f ';
+target_DADS = 1;
+title = 'r_{Au-I} = %.4f / r_{AuI2} = %.4f, %.4f, theta = %.4f / chi: %.4f';
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.5, [2.4 2.4 100], 2.5);  % lower bound
-ub        = horzcat(2.7, [2.9 2.9 130], 3.1);  % upper bound
+lb        = horzcat(2.55, [2.5 2.5 170]);  % lower bound
+ub        = horzcat(2.65, [2.8 2.8 180]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -69,12 +68,7 @@ fprintf('Calculating scattering factors...\n');
 [Sq_I, ~]          = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
 % bent State (I-Au-I)
-[f2_bent, ff_bent] = DHanfuncs.calc_scattering_factors(q_fit, elem_bent, xfactor);
-
-[f2_I2, ff_I2] = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor);
-
-
-
+[f2_AuI2, ff_AuI2] = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI2, xfactor);
 
 %% ========================================================================
 %  4. Fitting Configuration
@@ -95,10 +89,8 @@ cfg.f2_AuI  = f2_AuI;
 cfg.ff_AuI  = ff_AuI;
 cfg.Sq_I    = Sq_I;
 
-cfg.f2_bent = f2_bent;
-cfg.ff_bent = ff_bent;
-cfg.f2_I2 = f2_I2;
-cfg.ff_I2 = ff_I2;
+cfg.f2_AuI2 = f2_AuI2;
+cfg.ff_AuI2 = ff_AuI2;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -127,7 +119,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf(title, out.params);
+plot_title = sprintf(title, out.params, out.chi2);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
@@ -183,19 +175,17 @@ end
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
     r_AuI = params(1);
-    BENT = [params(2), params(3), params(4)];  % r1, r2, theta
-    r_I2 = params(5);
+    GS = [params(2), params(3), params(4)];  % r1, r2, theta
 
     % 1. Calculate Product State Sq (AuI + I)
     % Product is Diatomic (Au-I) + Monoatomic (I)
     Sq_AuI = calc_Diatomic_Sq(cfg.q, r_AuI, cfg.f2_AuI, cfg.ff_AuI);
-    Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
     
     % 2. Calculate Reference State Sq (AuI2)
-    Sq_bent = calc_Triatomic_Sq(cfg.q, BENT(1), BENT(2), BENT(3), cfg.f2_bent, cfg.ff_bent);
+    Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_AuI2, cfg.ff_AuI2);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_bent + Sq_AuI + Sq_I2 - 2*(Sq_AuI + cfg.Sq_I);
+    theory_dSq = Sq_GS - (Sq_AuI + cfg.Sq_I);
 
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
