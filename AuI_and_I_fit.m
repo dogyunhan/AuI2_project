@@ -180,7 +180,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     Sq_AuI2 = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_AuI2, cfg.ff_AuI2);
 
     % 2. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_AuI2 - (cfg.Sq_Au + Sq_I2);
+    theory_dSq =  (cfg.Sq_Au + Sq_I2) - Sq_AuI2;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
