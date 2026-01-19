@@ -16,7 +16,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 4;
+target_DADS = 1;
 title = 'r_{Au-I} = %.4f / r_{AuI2} = %.4f, %.4f, theta = %.4f / chi: %.4f';
 
 chi_red = true;
@@ -185,7 +185,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     Sq_GS = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_AuI2, cfg.ff_AuI2);
     
     % 3. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_GS - (Sq_AuI + cfg.Sq_I);
+    theory_dSq =  (Sq_AuI + cfg.Sq_I) - Sq_GS;
 
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
