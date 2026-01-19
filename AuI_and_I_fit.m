@@ -25,8 +25,8 @@ chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.55, [2.5 2.5 90]);  % lower bound
-ub        = horzcat(2.65, [3.5 3.5 150]);  % upper bound
+lb = horzcat(2.55, [2.5 2.5 90]);  % lower bound
+ub = horzcat(2.65, [3.5 3.5 150]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
