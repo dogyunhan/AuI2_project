@@ -20,16 +20,17 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 4;
+target_DADS = 2;
 title = ['r_{I2} = %.4f / r_{AuI} = %.4f / ' ...
-    'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f '];
+    'r_{AuI2 dimer} = %.4f, %.4f, %.4f, theta = %.4f / ' ...
+    'chi = %.5f '];
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.8, 2.5, [2.3 2.3 2.3 90]);  % lower bound
-ub        = horzcat(3.1, 2.7, [3.6 3.6 3.6 180]);  % upper bound
+lb = horzcat(2.0, 2.55, [2.0 2.0 2.0 90]);  % lower bound
+ub = horzcat(3.3, 2.65, [3.3 3.3 3.3 180]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -129,7 +130,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf(title, out.params);
+plot_title = sprintf(title, out.params, out.chi2);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
