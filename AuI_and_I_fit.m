@@ -18,15 +18,15 @@ files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat");
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
 target_DADS = 1;
-% title = 'r_{Au-I} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f';
-title = 'r_{Au-I} = %.4f /, r_{iso} = %.4f, %.4f, theta = %.4f';
+% title = 'r_{Au-I} = %.4f / r_{bent} = %.4f, %.4f, theta = %.4f / chi = %.5f';
+title = 'r_{Au-I} = %.4f /, r_{iso} = %.4f, %.4f, theta = %.4f / chi = %.5f';
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.5, [2.4 2.4 100]);  % lower bound
-ub        = horzcat(2.7, [2.9 2.9 130]);  % upper bound
+lb        = horzcat(2.55, [2.5 2.5 90]);  % lower bound
+ub        = horzcat(2.65, [3.5 3.5 150]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -123,7 +123,7 @@ plot_data(2).y = out.fit_dSq;
 plot_data(2).color = 'blue'; 
 plot_data(2).label = 'Theory Fit';
 
-plot_title = sprintf(title, out.params);
+plot_title = sprintf(title, out.params, out.chi2);
 
 DHanfuncs.custom_plot(plot_data, LineWidth=1.5, Title=plot_title, XLim=[1 7]);
 
