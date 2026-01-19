@@ -7,8 +7,8 @@ clc; clearvars; close all;
 % [System] 원자 번호 설정
 elem_AuI2 = [53, 79, 53];      % Product State: Au-I (Diatomic)
 
-elem_I2  = [53, 53];
 atom_Au  = 79;
+atom_I  = 53;
 
 % [Path] 데이터 파일 경로
 base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProcess\resultsCD";
@@ -18,14 +18,14 @@ files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat");
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
 target_DADS = 1;
-title = 'r_{I2} = %.4f / r_{AuI2} = %.4f, %.4f, theta = %.4f / chi = %.5f';
+title = 'r_{AuI2} = %.4f, %.4f, theta = %.4f / chi = %.5f';
 
 chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb = horzcat(2.0, [2.5 2.5 170]);  % lower bound
-ub = horzcat(3.3, [2.8 2.8 180]);  % upper bound
+lb = horzcat([2.5 2.5 170]);  % lower bound
+ub = horzcat([2.8 2.8 180]);  % upper bound
 init_pars = lb;
 
 % [External Script] 상수 로드
@@ -67,7 +67,7 @@ fprintf('Calculating scattering factors...\n');
 [f2_AuI2, ff_AuI2]   = DHanfuncs.calc_scattering_factors(q_fit, elem_AuI2, xfactor);
 
 [Sq_Au, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_Au, xfactor);
-[f2_I2, ff_I2] = DHanfuncs.calc_scattering_factors(q_fit, elem_I2, xfactor);
+[Sq_I, ~]  = DHanfuncs.calc_scattering_factors(q_fit, atom_I, xfactor);
 
 
 %% ========================================================================
@@ -87,9 +87,8 @@ cfg.heat_dat   = heat_dat; % PEPC용 Basis
 % Theory Factors
 cfg.f2_AuI2  = f2_AuI2;
 cfg.ff_AuI2  = ff_AuI2;
-cfg.f2_I2 = f2_I2;
-cfg.ff_I2 = ff_I2;
 cfg.Sq_Au = Sq_Au;
+cfg.Sq_I = Sq_I;
 
 % Optimization Settings
 cfg.x0     = init_pars;
@@ -173,14 +172,12 @@ end
 
 function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     % Unpack
-    r_I2 = params(1);
-    GS = [params(2) params(3) params(4)];
+    GS = [params(1) params(2) params(3)];
 
-    Sq_I2  = calc_Diatomic_Sq(cfg.q, r_I2, cfg.f2_I2, cfg.ff_I2);
     Sq_AuI2 = calc_Triatomic_Sq(cfg.q, GS(1), GS(2), GS(3), cfg.f2_AuI2, cfg.ff_AuI2);
 
     % 2. Calculate Difference Spectrum (dSq)
-    theory_dSq = Sq_AuI2 - (cfg.Sq_Au + Sq_I2);
+    theory_dSq = (cfg.Sq_Au + 2*cfg.Sq_I) - Sq_AuI2;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
