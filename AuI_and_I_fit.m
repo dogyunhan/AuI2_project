@@ -15,7 +15,7 @@ files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat")
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
 files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
 
-target_DADS = 3;
+target_DADS = 4;
 
 title = ['r_{Au2} = %.4f / ' ...
 'r_{AuI2 dimer} = %.4f (2개), %.4f, theta = %.4f / chi = %.5f '];
@@ -24,7 +24,7 @@ chi_red = true;
 
 % [Fitting Parameters]
 fit_range = [3.0, 7.0];    % q Fitting Range (A^-1)
-lb        = horzcat(2.6, [2.4 2.9 90]);  % lower bound
+lb        = horzcat(2.4, [2.4 2.9 90]);  % lower bound
 ub        = horzcat(3.2, [2.8 3.6 180]);  % upper bound
 init_pars = lb;
 
@@ -180,7 +180,7 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
 
     % 2. Calculate Difference Spectrum (dSq)
 
-    theory_dSq = Sq_AuI_dimer - 2 * Sq_Au2;
+    theory_dSq =  Sq_Au2 + 2*cfg.Sq_I - Sq_AuI_dimer;
     
     % 4. Apply PEPC & Scaling to match Experiment
     % (Orthogonalize against solvent heating)
