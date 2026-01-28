@@ -13,7 +13,7 @@ base_path = "\\172.30.150.180\homes\sdlab\230425_ESRF_AuBr2\SCRIPTS\inHouseProce
 files = struct();
 files.solv     = fullfile(base_path, "heating_MeCN_0001", "merged_solv_dat.dat");
 files.dads     = fullfile(base_path, "AuI2_30mM_0002", "DADS_comps_4.dat"); 
-files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4.dat"); 
+files.dads_std = fullfile(base_path, "AuI2_30mM_0002", "std_DADS_comps_4_new.dat"); 
 
 target_DADS = 4;
 
@@ -192,7 +192,10 @@ function [chi2, theory_dSq_scaled] = objective_function(params, cfg)
     res = (cfg.target_dSq(chi_mask, :) - theory_dSq_scaled(chi_mask, :)) ./ cfg.target_Std(chi_mask, :);
     chi2 = sum(res.^2, 'omitnan');
     if cfg.chi_red
-        chi2 = chi2 / (numel(cfg.q) - numel(params) - 1);
+        n_data_points = sum(chi_mask);  % fitting 범위 내 데이터 포인트 수
+        n_params = numel(params);       % 자유 파라미터 수
+        dof = n_data_points - n_params; % 자유도 (Degrees of Freedom)
+        chi2 = chi2 / dof;
     end
 end
 
